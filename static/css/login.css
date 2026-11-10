@@ -1,0 +1,11 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+body {
+	font-family: 'Inter', sans-serif;
+}
+
+.bg-pattern {
+	background-color: #2563eb;
+	background-image: radial-gradient(circle at 100% 0%, #3b82f6 0%, transparent 40%),
+		radial-gradient(circle at 0% 100%, #1d4ed8 0%, transparent 40%);
+}
