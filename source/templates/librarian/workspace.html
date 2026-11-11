@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Libra - Bàn làm việc Thủ thư</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 flex h-screen overflow-hidden">
+
+    <!-- Sidebar Tác nghiệp Thủ thư -->
+    <aside class="w-64 bg-white border-r border-slate-100 flex flex-col justify-between hidden md:flex">
+        <div>
+            <!-- Logo Brand -->
+            <div class="h-16 flex items-center px-6 border-b border-slate-50">
+                <div class="flex items-center gap-2 text-blue-600 font-bold text-xl">
+                    <div class="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center">
+                        <i class="fa-solid fa-swatchbook"></i>
+                    </div>
+                    Libra <span class="text-[10px] bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded font-semibold">Staff</span>
+                </div>
+            </div>
+
+            <!-- Operational Navigation Menu -->
+            <div class="p-4">
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3 px-3">Nghiệp vụ</p>
+                <nav class="space-y-1">
+                    <a href="#" class="flex items-center gap-3 px-3 py-2.5 bg-blue-50 text-blue-600 rounded-lg font-medium text-sm transition-colors">
+                        <i class="fa-solid fa-chart-pie w-5 text-center"></i> Tổng quan
+                    </a>
+                    <a href="#" class="flex items-center gap-3 px-3 py-2.5 text-slate-500 hover:bg-slate-50 hover:text-slate-700 rounded-lg font-medium text-sm transition-colors">
+                        <i class="fa-solid fa-book-medical w-5 text-center"></i> Mượn sách
+                    </a>
+                    <a href="#" class="flex items-center gap-3 px-3 py-2.5 text-slate-500 hover:bg-slate-50 hover:text-slate-700 rounded-lg font-medium text-sm transition-colors">
+                        <i class="fa-solid fa-book-arrow-left w-5 text-center"></i> Trả sách
+                    </a>
+                    <a href="#" class="flex items-center gap-3 px-3 py-2.5 text-slate-500 hover:bg-slate-50 hover:text-slate-700 rounded-lg font-medium text-sm transition-colors">
+                        <i class="fa-solid fa-file-invoice w-5 text-center"></i> Quản lý phiếu mượn
+                    </a>
+                    <a href="#" class="flex items-center gap-3 px-3 py-2.5 text-slate-500 hover:bg-slate-50 hover:text-slate-700 rounded-lg font-medium text-sm transition-colors">
+                        <i class="fa-solid fa-users-gear w-5 text-center"></i> Quản lý độc giả
+                    </a>
+                    <a href="#" class="flex items-center gap-3 px-3 py-2.5 text-slate-500 hover:bg-slate-50 hover:text-slate-700 rounded-lg font-medium text-sm transition-colors">
+                        <i class="fa-solid fa-warehouse w-5 text-center"></i> Tra cứu kho sách
+                    </a>
+                    <a href="#" class="flex items-center gap-3 px-3 py-2.5 text-slate-500 hover:bg-slate-50 hover:text-slate-700 rounded-lg font-medium text-sm transition-colors">
+                        <i class="fa-solid fa-triangle-exclamation w-5 text-center"></i> Sách quá hạn
+                    </a>
+                </nav>
+            </div>
+        </div>
+
+        <!-- User Profile Footer -->
+        <div class="p-4 border-t border-slate-100">
+            <div class="flex items-center gap-3 px-2">
+                <div class="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-sm uppercase">
+                    {{ username[0] }}
+                </div>
+                <div class="flex-1 min-w-0">
+                    <p class="text-sm font-bold text-slate-700 truncate">{{ username }}</p>
+                    <p class="text-xs text-slate-500 truncate">Thủ thư</p>
+                </div>
+                <a href="{{ url_for('auth.logout') }}" class="text-slate-400 hover:text-red-500 transition-colors" title="Đăng xuất">
+                    <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                </a>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Workspace Area -->
+    <main class="flex-1 flex flex-col h-screen overflow-y-auto">
+        <!-- Top Action Bar -->
+        <header class="h-16 flex items-center justify-between px-8 bg-white/50 backdrop-blur-sm sticky top-0 z-10 border-b border-slate-100">
+            <h1 class="text-sm font-bold text-slate-600 uppercase tracking-wider">Bàn làm việc thủ thư</h1>
+            <div class="flex items-center gap-3">
+                <button class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-4 py-2 rounded-lg transition-colors shadow-sm flex items-center gap-2">
+                    <i class="fa-solid fa-plus"></i> Nhận trả
+                </button>
+                <button class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-4 py-2 rounded-lg transition-colors shadow-sm flex items-center gap-2">
+                    <i class="fa-solid fa-plus"></i> Tạo phiếu mượn
+                </button>
+            </div>
+        </header>
+
+        <div class="p-4 md:p-8 max-w-7xl mx-auto w-full">
+            
+            <!-- Statistics Widgets Grid[cite: 24] -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-8">
+                <!-- Yêu cầu chờ duyệt -->
+                <div class="bg-white p-5 rounded-xl border border-slate-100 shadow-sm flex items-center justify-between">
+                    <div>
+                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Yêu cầu chờ duyệt</p>
+                        <span class="text-3xl font-bold text-slate-800">{{ stats.pending_requests }}</span>
+                    </div>
+                    <div class="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-xl">
+                        <i class="fa-regular fa-file-lines"></i>
+                    </div>
+                </div>
+
+                <!-- Đang mượn -->
+                <div class="bg-white p-5 rounded-xl border border-slate-100 shadow-sm flex items-center justify-between">
+                    <div>
+                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Đang mượn</p>
+                        <span class="text-3xl font-bold text-slate-800">{{ stats.active_loans }}</span>
+                    </div>
+                    <div class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl">
+                        <i class="fa-solid fa-book-open-reader"></i>
+                    </div>
+                </div>
+
+                <!-- Cần trả hôm nay -->
+                <div class="bg-white p-5 rounded-xl border border-slate-100 shadow-sm flex items-center justify-between">
+                    <div>
+                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Cần trả hôm nay</p>
+                        <span class="text-3xl font-bold text-slate-800">{{ stats.due_today }}</span>
+                    </div>
+                    <div class="w-12 h-12 rounded-xl bg-orange-50 text-orange-500 flex items-center justify-center text-xl">
+                        <i class="fa-regular fa-clock"></i>
+                    </div>
+                </div>
+
+                <!-- Sách quá hạn -->
+                <div class="bg-white p-5 rounded-xl border border-slate-100 shadow-sm flex items-center justify-between">
+                    <div>
+                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Sách quá hạn</p>
+                        <span class="text-3xl font-bold text-slate-800">{{ stats.overdue_books }}</span>
+                    </div>
+                    <div class="w-12 h-12 rounded-xl bg-red-50 text-red-600 flex items-center justify-center text-xl">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Core Component: Transaction Table[cite: 24] -->
+            <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+                <div class="p-6 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div>
+                        <h3 class="font-bold text-slate-800 text-base">Giao dịch cần xử lý</h3>
+                        <p class="text-xs text-slate-500">Quản lý và phê duyệt các yêu cầu mượn trả sách mới nhất</p>
+                    </div>
+                    <div class="flex items-center gap-2 w-full sm:w-auto">
+                        <input type="text" placeholder="Tìm mã phiếu, độc giả..." class="px-3 py-1.5 border border-slate-200 rounded-lg text-xs focus:outline-none focus:border-blue-500 w-full sm:w-64">
+                    </div>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-50/70 text-[11px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100">
+                                <th class="py-3 px-6">Mã phiếu</th>
+                                <th class="py-3 px-6">Độc giả</th>
+                                <th class="py-3 px-6">Sách</th>
+                                <th class="py-3 px-6">Ngày yêu cầu</th>
+                                <th class="py-3 px-6">Hạn trả</th>
+                                <th class="py-3 px-6">Trạng thái</th>
+                                <th class="py-3 px-6 text-right">Thao tác</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100 text-sm">
+                            {% for tx in transactions %}
+                            <tr class="hover:bg-slate-50/50 transition-colors">
+                                <td class="py-4 px-6 font-semibold text-blue-600">{{ tx.loan_id }}</td>
+                                <td class="py-4 px-6 font-medium text-slate-800">{{ tx.reader }}</td>
+                                <td class="py-4 px-6 text-slate-600">{{ tx.book }}</td>
+                                <td class="py-4 px-6 text-slate-500 text-xs">{{ tx.borrow_date }}</td>
+                                <td class="py-4 px-6 text-slate-500 text-xs">{{ tx.due_date }}</td>
+                                <td class="py-4 px-6">
+                                    <span class="inline-block px-2.5 py-1 rounded-full text-xs font-semibold {{ tx.status_color }}">
+                                        {{ tx.status }}
+                                    </span>
+                                </td>
+                                <td class="py-4 px-6 text-right">
+                                    <button class="text-xs font-semibold text-blue-600 bg-blue-50 hover:bg-blue-600 hover:text-white px-3 py-1.5 rounded-lg transition-colors">
+                                        {{ tx.action }}
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- Table Footer pagination info -->
+                <div class="p-4 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+                    <span>Hiển thị 4 trên tổng số 124 giao dịch</span>
+                    <div class="flex items-center gap-1">
+                        <button class="px-3 py-1 rounded border border-slate-200 hover:bg-slate-50 disabled:opacity-50" disabled>Trước</button>
+                        <button class="px-3 py-1 rounded bg-blue-600 text-white font-semibold">1</button>
+                        <button class="px-3 py-1 rounded border border-slate-200 hover:bg-slate-50">2</button>
+                        <button class="px-3 py-1 rounded border border-slate-200 hover:bg-slate-50">Sau</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="h-8"></div>
+        </div>
+    </main>
+</body>
+</html>

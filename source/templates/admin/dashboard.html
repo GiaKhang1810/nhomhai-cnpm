@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Libra - Quản trị hệ thống</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 flex h-screen overflow-hidden">
+
+    <!-- Admin Sidebar -->
+    <aside class="w-64 bg-white border-r border-slate-100 flex flex-col justify-between hidden md:flex">
+        <div>
+            <!-- Logo Brand -->
+            <div class="h-16 flex items-center px-6 border-b border-slate-50">
+                <div class="flex items-center gap-2 text-blue-600 font-bold text-xl">
+                    <div class="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center">
+                        <i class="fa-solid fa-shield-halved"></i>
+                    </div>
+                    Libra <span class="text-[10px] bg-purple-100 text-purple-600 px-1.5 py-0.5 rounded font-semibold">Admin</span>
+                </div>
+            </div>
+
+            <!-- Management Menu -->
+            <div class="p-4">
+                <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3 px-3">Hệ thống</p>
+                <nav class="space-y-1">
+                    <a href="#" class="flex items-center gap-3 px-3 py-2.5 bg-blue-50 text-blue-600 rounded-lg font-medium text-sm transition-colors">
+                        <i class="fa-solid fa-chart-pie w-5 text-center"></i> Tổng quan
+                    </a>
+                    <a href="#" class="flex items-center gap-3 px-3 py-2.5 text-slate-500 hover:bg-slate-50 hover:text-slate-700 rounded-lg font-medium text-sm transition-colors">
+                        <i class="fa-solid fa-book w-5 text-center"></i> Quản lý sách
+                    </a>
+                    <a href="#" class="flex items-center gap-3 px-3 py-2.5 text-slate-500 hover:bg-slate-50 hover:text-slate-700 rounded-lg font-medium text-sm transition-colors">
+                        <i class="fa-solid fa-users w-5 text-center"></i> Độc giả
+                    </a>
+                    <a href="#" class="flex items-center gap-3 px-3 py-2.5 text-slate-500 hover:bg-slate-50 hover:text-slate-700 rounded-lg font-medium text-sm transition-colors">
+                        <i class="fa-solid fa-right-left w-5 text-center"></i> Mượn / Trả sách
+                    </a>
+                    <a href="#" class="flex items-center gap-3 px-3 py-2.5 text-slate-500 hover:bg-slate-50 hover:text-slate-700 rounded-lg font-medium text-sm transition-colors">
+                        <i class="fa-solid fa-clock-rotate-left w-5 text-center"></i> Lịch sử giao dịch
+                    </a>
+                    <a href="#" class="flex items-center gap-3 px-3 py-2.5 text-slate-500 hover:bg-slate-50 hover:text-slate-700 rounded-lg font-medium text-sm transition-colors">
+                        <i class="fa-solid fa-tags w-5 text-center"></i> Thể loại
+                    </a>
+                    <a href="#" class="flex items-center gap-3 px-3 py-2.5 text-slate-500 hover:bg-slate-50 hover:text-slate-700 rounded-lg font-medium text-sm transition-colors">
+                        <i class="fa-solid fa-gear w-5 text-center"></i> Cài đặt
+                    </a>
+                </nav>
+            </div>
+        </div>
+
+        <!-- Admin Profile Footer -->
+        <div class="p-4 border-t border-slate-100">
+            <div class="flex items-center gap-3 px-2">
+                <div class="w-10 h-10 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center font-bold text-sm uppercase">
+                    {{ username[0] }}
+                </div>
+                <div class="flex-1 min-w-0">
+                    <p class="text-sm font-bold text-slate-700 truncate">{{ username }}</p>
+                    <p class="text-xs text-slate-500 truncate">Quản trị viên</p>
+                </div>
+                <a href="{{ url_for('auth.logout') }}" class="text-slate-400 hover:text-red-500 transition-colors" title="Đăng xuất">
+                    <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                </a>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Workspace -->
+    <main class="flex-1 flex flex-col h-screen overflow-y-auto">
+        <!-- Top Action Bar -->
+        <header class="h-16 flex items-center justify-between px-8 bg-white/50 backdrop-blur-sm sticky top-0 z-10 border-b border-slate-100">
+            <h1 class="text-sm font-bold text-slate-600 uppercase tracking-wider">Tổng quan hệ thống</h1>
+            <div class="flex items-center gap-4">
+                <div class="relative hidden sm:block">
+                    <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-xs"></i>
+                    <input type="text" placeholder="Tìm kiếm..." class="pl-8 pr-4 py-1.5 bg-white border border-slate-200 rounded-full text-xs focus:outline-none focus:border-blue-500 w-48">
+                </div>
+                <button class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-4 py-2 rounded-lg transition-colors shadow-sm flex items-center gap-2">
+                    <i class="fa-solid fa-plus"></i> Thêm đầu sách
+                </button>
+            </div>
+        </header>
+
+        <div class="p-4 md:p-8 max-w-7xl mx-auto w-full">
+            
+            <!-- High-level Metric Cards (4 Widgets)[cite: 25] -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-8">
+                <!-- Tổng đầu sách -->
+                <div class="bg-white p-5 rounded-xl border border-slate-100 shadow-sm">
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Tổng đầu sách</p>
+                    <div class="flex items-baseline justify-between">
+                        <span class="text-2xl font-bold text-slate-800">{{ metrics.total_titles }}</span>
+                        <span class="text-[11px] font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">{{ metrics.title_trend }}</span>
+                    </div>
+                </div>
+
+                <!-- Độc giả đang hoạt động -->
+                <div class="bg-white p-5 rounded-xl border border-slate-100 shadow-sm">
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Độc giả đang hoạt động</p>
+                    <div class="flex items-baseline justify-between">
+                        <span class="text-2xl font-bold text-slate-800">{{ metrics.active_readers }}</span>
+                        <span class="text-[11px] font-semibold text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded">{{ metrics.reader_trend }}</span>
+                    </div>
+                </div>
+
+                <!-- Sách đang được mượn -->
+                <div class="bg-white p-5 rounded-xl border border-slate-100 shadow-sm">
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Sách đang được mượn</p>
+                    <div class="flex items-baseline justify-between">
+                        <span class="text-2xl font-bold text-slate-800">{{ metrics.active_loans }}</span>
+                        <span class="text-[11px] font-medium text-slate-500">{{ metrics.loan_note }}</span>
+                    </div>
+                </div>
+
+                <!-- Sách quá hạn -->
+                <div class="bg-white p-5 rounded-xl border border-slate-100 shadow-sm">
+                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Sách quá hạn</p>
+                    <div class="flex items-baseline justify-between">
+                        <span class="text-2xl font-bold text-red-600">{{ metrics.overdue_books }}</span>
+                        <span class="text-[11px] font-semibold text-red-600 bg-red-50 px-2 py-0.5 rounded">{{ metrics.overdue_note }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Visualization Charts Section (Line Chart & Donut Chart)[cite: 25] -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+                <!-- Line Chart: Hoạt động mượn / trả -->
+                <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm lg:col-span-2 flex flex-col justify-between">
+                    <div class="flex items-center justify-between mb-6">
+                        <div>
+                            <h3 class="font-bold text-slate-800 text-sm">Hoạt động mượn / trả</h3>
+                            <p class="text-xs text-slate-500">Thống kê chi tiết theo 7 ngày gần nhất</p>
+                        </div>
+                        <span class="text-xs font-semibold text-slate-500 bg-slate-100 px-3 py-1 rounded-lg">7 ngày qua</span>
+                    </div>
+                    <!-- Mockup Biểu đồ dạng SVG đường gấp khúc -->
+                    <div class="h-48 w-full flex items-end justify-between px-4 pt-6 pb-2 border-b border-slate-100 relative">
+                        <div class="absolute inset-x-0 top-0 bottom-8 flex flex-col justify-between pointer-events-none opacity-20">
+                            <div class="border-b border-slate-300 w-full"></div>
+                            <div class="border-b border-slate-300 w-full"></div>
+                            <div class="border-b border-slate-300 w-full"></div>
+                        </div>
+                        <!-- Cột dữ liệu mô phỏng -->
+                        <div class="flex flex-col items-center gap-2 z-10"><div class="w-2 h-20 bg-blue-500 rounded-full"></div><span class="text-[10px] text-slate-400">T2</span></div>
+                        <div class="flex flex-col items-center gap-2 z-10"><div class="w-2 h-28 bg-blue-500 rounded-full"></div><span class="text-[10px] text-slate-400">T3</span></div>
+                        <div class="flex flex-col items-center gap-2 z-10"><div class="w-2 h-24 bg-blue-500 rounded-full"></div><span class="text-[10px] text-slate-400">T4</span></div>
+                        <div class="flex flex-col items-center gap-2 z-10"><div class="w-2 h-36 bg-blue-600 rounded-full shadow-md"></div><span class="text-[10px] text-slate-400 font-bold">T5</span></div>
+                        <div class="flex flex-col items-center gap-2 z-10"><div class="w-2 h-32 bg-blue-500 rounded-full"></div><span class="text-[10px] text-slate-400">T6</span></div>
+                        <div class="flex flex-col items-center gap-2 z-10"><div class="w-2 h-40 bg-blue-600 rounded-full shadow-md"></div><span class="text-[10px] text-slate-400 font-bold">T7</span></div>
+                        <div class="flex flex-col items-center gap-2 z-10"><div class="w-2 h-28 bg-blue-500 rounded-full"></div><span class="text-[10px] text-slate-400">CN</span></div>
+                    </div>
+                    <div class="flex items-center justify-center gap-6 mt-4 text-xs font-medium text-slate-500">
+                        <span class="flex items-center gap-2"><span class="w-3 h-3 bg-blue-600 rounded-full"></span> Lượt mượn</span>
+                        <span class="flex items-center gap-2"><span class="w-3 h-3 bg-sky-300 rounded-full"></span> Lượt trả</span>
+                    </div>
+                </div>
+
+                <!-- Donut Chart: Phân loại sách -->
+                <div class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex flex-col justify-between">
+                    <div>
+                        <h3 class="font-bold text-slate-800 text-sm">Phân loại sách</h3>
+                        <p class="text-xs text-slate-500">Tỷ lệ danh mục kho sách</p>
+                    </div>
+                    <div class="flex items-center justify-center my-6">
+                        <div class="w-32 h-32 rounded-full border-8 border-blue-600 border-t-emerald-500 border-r-amber-400 flex items-center justify-center relative shadow-inner">
+                            <div class="text-center">
+                                <span class="text-xs font-bold text-slate-700 block">12.4k</span>
+                                <span class="text-[9px] text-slate-400 uppercase">Đầu sách</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="space-y-2 text-xs">
+                        <div class="flex items-center justify-between"><span class="flex items-center gap-2 text-slate-600"><span class="w-2.5 h-2.5 bg-blue-600 rounded-full"></span> Văn học</span><span class="font-bold text-slate-700">42%</span></div>
+                        <div class="flex items-center justify-between"><span class="flex items-center gap-2 text-slate-600"><span class="w-2.5 h-2.5 bg-emerald-500 rounded-full"></span> Khoa học</span><span class="font-bold text-slate-700">33%</span></div>
+                        <div class="flex items-center justify-between"><span class="flex items-center gap-2 text-slate-600"><span class="w-2.5 h-2.5 bg-amber-400 rounded-full"></span> Khác</span><span class="font-bold text-slate-700">25%</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Transactions Table[cite: 25] -->
+            <div class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+                <div class="p-6 border-b border-slate-100 flex items-center justify-between">
+                    <div>
+                        <h3 class="font-bold text-slate-800 text-sm">Giao dịch gần đây</h3>
+                        <p class="text-xs text-slate-500">Theo dõi các hoạt động mượn trả mới nhất trong hệ thống</p>
+                    </div>
+                    <a href="#" class="text-xs font-semibold text-blue-600 hover:underline">Xem tất cả</a>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-50/70 text-[11px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100">
+                                <th class="py-3 px-6">Mã phiếu</th>
+                                <th class="py-3 px-6">Độc giả</th>
+                                <th class="py-3 px-6">Tên sách</th>
+                                <th class="py-3 px-6">Ngày giao dịch</th>
+                                <th class="py-3 px-6">Hạn trả</th>
+                                <th class="py-3 px-6 text-right">Trạng thái</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100 text-sm">
+                            {% for tx in recent_transactions %}
+                            <tr class="hover:bg-slate-50/50 transition-colors">
+                                <td class="py-4 px-6 font-semibold text-blue-600">{{ tx.loan_id }}</td>
+                                <td class="py-4 px-6 font-medium text-slate-800">{{ tx.reader }}</td>
+                                <td class="py-4 px-6 text-slate-600">{{ tx.book }}</td>
+                                <td class="py-4 px-6 text-slate-500 text-xs">{{ tx.date }}</td>
+                                <td class="py-4 px-6 text-slate-500 text-xs">{{ tx.due_date }}</td>
+                                <td class="py-4 px-6 text-right">
+                                    <span class="inline-block px-2.5 py-1 rounded-full text-xs font-semibold {{ tx.status_color }}">
+                                        {{ tx.status }}
+                                    </span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            
+            <div class="h-8"></div>
+        </div>
+    </main>
+</body>
+</html>
