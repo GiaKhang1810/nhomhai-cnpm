@@ -130,12 +130,16 @@
                 <section class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm lg:col-span-2">
                     <h3 class="font-bold text-slate-800 text-sm">Hoạt động mượn / trả</h3>
                     <p class="text-xs text-slate-500 mb-5">Dữ liệu thực tế trong 7 ngày gần nhất</p>
-                    <canvas id="activityChart" height="120" aria-label="Biểu đồ lượt mượn và trả"></canvas>
+                    <div class="relative h-72 w-full">
+                        <canvas id="activityChart" class="block !h-full !w-full" aria-label="Biểu đồ lượt mượn và trả"></canvas>
+                    </div>
                 </section>
                 <section class="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm">
                     <h3 class="font-bold text-slate-800 text-sm">Phân loại sách</h3>
                     <p class="text-xs text-slate-500 mb-5">Số bản sao theo thể loại</p>
-                    <canvas id="categoryChart" height="220" aria-label="Biểu đồ phân loại sách"></canvas>
+                    <div class="relative h-72 w-full">
+                        <canvas id="categoryChart" class="block !h-full !w-full" aria-label="Biểu đồ phân loại sách"></canvas>
+                    </div>
                 </section>
             </div>
 
