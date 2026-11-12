@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify, request
+from flask import Blueprint, jsonify, request, session
 
 from source.core.decorators import login_required, role_required
 from source.services.book_service import BookService
@@ -29,15 +29,20 @@ def search():
     if not keyword:
         return jsonify({"success": False, "message": "Vui lòng nhập từ khóa tìm kiếm."}), 400
     books = book_service.search_books(keyword)
-    return jsonify({"success": True, "data": [_serialize_book(book) for book in books], "count": len(books)})
+    response = jsonify({"success": True, "data": [_serialize_book(book) for book in books], "count": len(books)})
+    response.headers["Cache-Control"] = "no-store, max-age=0"
+    return response
 
 
 @books_bp.get("/")
 @login_required
 def collection():
     keyword = request.args.get("q", "").strip()
-    books = book_service.search_books(keyword)
-    return jsonify({"success": True, "data": [_serialize_book(book) for book in books], "count": len(books)})
+    include_inactive = request.args.get("include_inactive") == "true" and session.get("role") in {"LIBRARIAN", "ADMIN"}
+    books = book_service.search_books(keyword, include_inactive=include_inactive)
+    response = jsonify({"success": True, "data": [_serialize_book(book) for book in books], "count": len(books)})
+    response.headers["Cache-Control"] = "no-store, max-age=0"
+    return response
 
 
 @books_bp.post("/")
@@ -46,7 +51,10 @@ def collection():
 def create_book():
     data = request.get_json(silent=True) or {}
     success, message = book_service.add_new_book(data)
-    return jsonify({"success": success, "message": message}), 201 if success else 400
+    response = jsonify({"success": success, "message": message})
+    response.status_code = 201 if success else 400
+    response.headers["Cache-Control"] = "no-store, max-age=0"
+    return response
 
 
 @books_bp.get("/<string:book_code>")
@@ -64,15 +72,43 @@ def get_book(book_code: str):
 def update_book(book_code: str):
     data = request.get_json(silent=True) or {}
     success, message = book_service.update_book(book_code, data)
-    return jsonify({"success": success, "message": message}), 200 if success else 400
+    response = jsonify({"success": success, "message": message})
+    response.status_code = 200 if success else 400
+    response.headers["Cache-Control"] = "no-store, max-age=0"
+    return response
+
+
+@books_bp.patch("/<string:book_code>/deactivate")
+@login_required
+@role_required("LIBRARIAN", "ADMIN")
+def deactivate_book(book_code: str):
+    success, message = book_service.deactivate_book(book_code)
+    response = jsonify({"success": success, "message": message})
+    response.status_code = 200 if success else 400
+    response.headers["Cache-Control"] = "no-store, max-age=0"
+    return response
+
+
+@books_bp.patch("/<string:book_code>/activate")
+@login_required
+@role_required("LIBRARIAN", "ADMIN")
+def activate_book(book_code: str):
+    success, message = book_service.activate_book(book_code)
+    response = jsonify({"success": success, "message": message})
+    response.status_code = 200 if success else 400
+    response.headers["Cache-Control"] = "no-store, max-age=0"
+    return response
 
 
 @books_bp.delete("/<string:book_code>")
 @login_required
 @role_required("LIBRARIAN", "ADMIN")
-def deactivate_book(book_code: str):
-    success, message = book_service.deactivate_book(book_code)
-    return jsonify({"success": success, "message": message}), 200 if success else 400
+def delete_book(book_code: str):
+    success, message = book_service.delete_book(book_code)
+    response = jsonify({"success": success, "message": message})
+    response.status_code = 200 if success else 400
+    response.headers["Cache-Control"] = "no-store, max-age=0"
+    return response
 
 
 

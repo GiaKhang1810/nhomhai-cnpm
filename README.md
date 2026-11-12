@@ -9,15 +9,15 @@ Hệ thống quản lý thư viện xây dựng bằng **Python 3.13+, Flask và
 - Xem bảng thông tin hồ sơ/thẻ độc giả và lịch sử mượn của chính tài khoản đang đăng nhập.
 
 ### Librarian (Thủ thư)
-- Tạo, tìm kiếm, cập nhật và ngừng kinh doanh đầu sách. Khi thêm đầu sách, hệ thống tạo các bản sao vật lý tương ứng.
-- Tạo và cập nhật hồ sơ độc giả; khóa thẻ khi độc giả không còn bản sao đang mượn.
+- Tạo, tìm kiếm, cập nhật, ngừng kinh doanh, mở lại và xóa đầu sách (chỉ xóa vật lý khi chưa có lịch sử mượn/trả). Khi thêm đầu sách, hệ thống tạo các bản sao vật lý tương ứng.
+- Tạo, cập nhật, khóa, mở khóa và xóa hồ sơ độc giả. Chỉ xóa vật lý khi độc giả chưa có lịch sử mượn; khóa yêu cầu không còn sách chưa trả và khoản phí chưa thanh toán.
 - Lập phiếu mượn, ghi nhận trả một phần hoặc toàn bộ các bản sao.
 - Tính phí trễ hạn **5.000 VND/ngày/bản sao**; tính bồi thường theo giá trị niêm yết đối với bản sao hỏng/mất.
 - Ghi nhận thanh toán toàn phần hoặc một phần các khoản phí.
 
 ### Administrator (Quản trị viên)
 - Xem dashboard thống kê từ dữ liệu thực tế.
-- Tạo, cập nhật vai trò và khóa tài khoản nhân viên.
+- Tạo, cập nhật vai trò, khóa, mở khóa và xóa tài khoản nhân viên (xóa bị chặn nếu tài khoản đã ghi nhận thanh toán).
 - Xem báo cáo hoạt động mượn/trả và phân bố bản sao theo thể loại.
 
 ## Yêu cầu môi trường
@@ -49,6 +49,14 @@ Hệ thống quản lý thư viện xây dựng bằng **Python 3.13+, Flask và
    ```
 
    Đặt `DB_NAME=library_db` trong `.env`. Nếu dùng tên database khác, sửa dòng `USE library_db;` trong script trước khi chạy. Lệnh này dành cho database mới.
+
+   **Đặt lại database từ đầu (xóa toàn bộ dữ liệu cũ):** nếu bạn chủ động muốn bỏ database hiện tại và tạo mới hoàn toàn, hãy kiểm tra `DB_NAME=library_db` trong `.env`, sau đó chạy:
+
+   ```powershell
+   mysql -u root -p < migrations/reset_database.sql
+   ```
+
+   Lệnh trên xóa vĩnh viễn database `library_db`, tạo lại database và toàn bộ bảng theo schema mới nhất. Hãy sao lưu trước nếu còn cần dữ liệu cũ. File reset chỉ dùng khi thực sự muốn làm mới database; không chạy trong quy trình cập nhật thông thường.
 
    Nếu bạn đã khởi tạo database bằng schema cũ có trong phiên bản dự án trước, hãy sao lưu database rồi chạy migration nâng cấp thay vì chạy lại schema mới:
 
@@ -93,6 +101,10 @@ Một dòng `books` là đầu sách; mỗi bản sao vật lý được lưu ri
 
 Trong transaction, ứng dụng khóa dòng độc giả, kiểm tra thẻ còn hiệu lực, số lượng đang mượn dưới 5, không có sách quá hạn; sau đó khóa các đầu sách/bản sao được chọn, xác minh tất cả bản sao ở trạng thái `AVAILABLE`, ghi phiếu và chi tiết, cập nhật trạng thái bản sao và số lượng khả dụng. Nếu một bước thất bại, toàn bộ transaction rollback.
 
+### Khóa, mở khóa và xóa dữ liệu
+
+Tài khoản nhân viên và độc giả có thể được mở khóa sau khi bị khóa. Mở khóa thẻ độc giả chỉ thành công khi thẻ vẫn còn hạn; nếu đã hết hạn, cần cập nhật ngày hết hạn trước. Đầu sách đã ngừng kinh doanh có thể được mở lại. Xóa là thao tác vật lý và chỉ được phép khi không có dữ liệu lịch sử tham chiếu: độc giả có phiếu mượn, đầu sách có chi tiết mượn/trả, hoặc nhân viên đã nhận thanh toán sẽ không thể bị xóa. Trong các trường hợp đó, hãy dùng chức năng khóa/ngừng kinh doanh để giữ nguyên lịch sử.
+
 ### Trả sách và thanh toán
 
 Mỗi chi tiết phiếu mượn được liên kết với đúng một `copy_id`. Hệ thống chỉ nhận trả bản sao thuộc phiếu và chưa trả trước đó. Bản sao bình thường trở lại `AVAILABLE`; bản sao hỏng/mất chuyển sang trạng thái tương ứng và không tăng số lượng khả dụng. Khi giảm số lượng đầu sách, các bản sao khả dụng được chuyển sang `RETIRED` thay vì xóa, để bảo toàn khóa ngoại và lịch sử giao dịch. Phí phát sinh lưu trong `borrowing_details`; các lần thanh toán lưu riêng trong `fine_payments` để hỗ trợ thanh toán từng phần và tránh ghi đè lịch sử.
@@ -103,13 +115,17 @@ Mỗi chi tiết phiếu mượn được liên kết với đúng một `copy_i
 |---|---|---|---|
 | `POST` | `/auth/login` | Public | Đăng nhập; payload gồm `username`, `password`, `role` (`reader`, `librarian`, `admin`) |
 | `POST` | `/auth/logout` | Authenticated | Đăng xuất |
-| `GET` | `/api/books/?q=` | All roles | Danh mục/tìm kiếm sách |
+| `GET` | `/api/books/?q=` | All roles | Danh mục/tìm kiếm sách; Librarian/Admin có thể thêm `include_inactive=true` để xem đầu sách đã ngừng |
 | `GET` | `/api/books/<book_code>` | All roles | Chi tiết sách |
 | `POST` | `/api/books/` | Librarian/Admin | Thêm đầu sách và bản sao |
-| `PUT` / `DELETE` | `/api/books/<book_code>` | Librarian/Admin | Cập nhật/ngừng kinh doanh |
-| `GET` | `/api/readers/search?q=` | Librarian/Admin | Tìm độc giả |
+| `PUT` | `/api/books/<book_code>` | Librarian/Admin | Cập nhật đầu sách |
+| `PATCH` | `/api/books/<book_code>/deactivate` / `/activate` | Librarian/Admin | Ngừng kinh doanh / mở lại đầu sách |
+| `DELETE` | `/api/books/<book_code>` | Librarian/Admin | Xóa vật lý nếu chưa có lịch sử mượn/trả |
+| `GET` | `/api/readers/?q=` | Librarian/Admin | Danh sách độc giả (bỏ `q` để tải toàn bộ) / tìm kiếm |
+| `GET` | `/api/readers/search?q=` | Librarian/Admin | Tìm độc giả theo từ khóa |
 | `POST` / `PUT` | `/api/readers/` / `/api/readers/<reader_id>` | Librarian/Admin | Tạo/cập nhật độc giả |
-| `PATCH` | `/api/readers/<reader_id>/deactivate` | Librarian/Admin | Khóa thẻ độc giả |
+| `PATCH` | `/api/readers/<reader_id>/deactivate` / `/activate` | Librarian/Admin | Khóa / mở khóa thẻ độc giả (mở khóa yêu cầu thẻ còn hạn) |
+| `DELETE` | `/api/readers/<reader_id>` | Librarian/Admin | Xóa vật lý nếu chưa có lịch sử mượn |
 | `POST` | `/borrowing/create` | Librarian | Tạo phiếu mượn; `reader_id`, `copy_ids[]` |
 | `GET` | `/borrowing/lookup/<loan_id>` | Librarian | Tra cứu phiếu mượn và các bản sao |
 | `GET` | `/borrowing/lookup?reader_id=<reader_id>` | Librarian | Tra cứu danh sách phiếu mượn theo độc giả |
@@ -122,7 +138,8 @@ Mỗi chi tiết phiếu mượn được liên kết với đúng một `copy_i
 | `GET` | `/admin/reports/categories` | Librarian/Admin | Phân bố bản sao theo thể loại |
 | `GET` | `/api/accounts/` | Admin | Danh sách tài khoản nhân viên |
 | `POST` / `PUT` | `/api/accounts/` / `/api/accounts/<user_id>` | Admin | Tạo/cập nhật nhân viên và vai trò |
-| `PATCH` | `/api/accounts/<user_id>/deactivate` | Admin | Khóa tài khoản nhân viên |
+| `PATCH` | `/api/accounts/<user_id>/deactivate` / `/activate` | Admin | Khóa / mở khóa tài khoản nhân viên |
+| `DELETE` | `/api/accounts/<user_id>` | Admin | Xóa nhân viên nếu chưa ghi nhận thanh toán; không cho xóa chính mình hoặc quản trị viên hoạt động cuối cùng |
 
 Các endpoint JSON trả về dạng `{ "success": boolean, "message"?: string, "data"?: ... }`. Quyền luôn được xác minh ở backend, không dựa vào tab vai trò phía giao diện.
 
@@ -166,3 +183,12 @@ Các luồng cần kiểm thử tích hợp với MySQL gồm đăng nhập, t�
 - Cookie session đặt `HttpOnly` và `SameSite=Lax`; bật `SESSION_COOKIE_SECURE=true` khi chạy sau HTTPS.
 - Ứng dụng chưa cung cấp luồng quên mật khẩu/email, yêu cầu đặt trước sách, điểm thưởng, thông báo hoặc yêu thích vì các chức năng này không nằm trong schema/nghiệp vụ bắt buộc của tài liệu đặc tả hiện tại.
 - Dashboard hiển thị dữ liệu lấy từ MySQL; cần khởi tạo database và có dữ liệu trước khi sử dụng.
+
+## Cập nhật giao diện CRUD (12/11/2026)
+
+- Trang quản lý nhân viên cho phép lưu `full_name` trực tiếp cùng username/email; hồ sơ thủ thư được cập nhật bằng `user_id` trong một transaction.
+- Khi chuyển tài khoản từ Admin sang Thủ thư, giao diện yêu cầu họ tên và API tạo hồ sơ `librarians` hợp lệ thay vì tự chèn tên mặc định.
+- Các thao tác tạo sách, độc giả và nhân viên chờ API xác nhận thành công, tải lại danh sách bằng request `no-store` kèm cache-buster, rồi mới reset form khi bản ghi mới đã xuất hiện.
+- Khi danh sách chưa đồng bộ sau khi API xác nhận lưu, giao diện giữ dữ liệu trong form và hướng dẫn tải lại; tránh người dùng gửi trùng bản ghi.
+- Bổ sung nút Tải lại cho danh sách sách và độc giả; đổi phiên bản URL JavaScript để trình duyệt không tiếp tục dùng file script cũ trong cache.
+- Lỗi SQL khi tạo/cập nhật nhân viên, độc giả hoặc sách được ghi vào Flask log để thuận tiện chẩn đoán.

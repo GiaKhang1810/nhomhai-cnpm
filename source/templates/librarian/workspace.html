@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,9 +9,13 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
-        body { font-family: 'Inter', sans-serif; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+        }
     </style>
 </head>
+
 <body class="bg-slate-50 text-slate-800 flex h-screen overflow-hidden">
 
     <!-- Sidebar Tác nghiệp Thủ thư -->
@@ -22,7 +27,8 @@
                     <div class="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center">
                         <i class="fa-solid fa-swatchbook"></i>
                     </div>
-                    Libra <span class="text-[10px] bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded font-semibold">Staff</span>
+                    Libra <span
+                        class="text-[10px] bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded font-semibold">Staff</span>
                 </div>
             </div>
 
@@ -30,28 +36,36 @@
             <div class="p-4">
                 <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3 px-3">Nghiệp vụ</p>
                 <nav class="space-y-1">
-                    <a href="{{ url_for('librarian.workspace') }}" class="flex items-center gap-3 px-3 py-2.5 bg-blue-50 text-blue-600 rounded-lg font-medium text-sm transition-colors">
+                    <a href="{{ url_for('librarian.workspace') }}"
+                        class="flex items-center gap-3 px-3 py-2.5 bg-blue-50 text-blue-600 rounded-lg font-medium text-sm transition-colors">
                         <i class="fa-solid fa-chart-pie w-5 text-center"></i> Tổng quan
                     </a>
-                    <a href="{{ url_for('librarian.borrow_page') }}" class="flex items-center gap-3 px-3 py-2.5 text-slate-500 hover:bg-slate-50 hover:text-slate-700 rounded-lg font-medium text-sm transition-colors">
+                    <a href="{{ url_for('librarian.borrow_page') }}"
+                        class="flex items-center gap-3 px-3 py-2.5 text-slate-500 hover:bg-slate-50 hover:text-slate-700 rounded-lg font-medium text-sm transition-colors">
                         <i class="fa-solid fa-book-medical w-5 text-center"></i> Mượn sách
                     </a>
-                    <a href="{{ url_for('librarian.returns_page') }}" class="flex items-center gap-3 px-3 py-2.5 text-slate-500 hover:bg-slate-50 hover:text-slate-700 rounded-lg font-medium text-sm transition-colors">
+                    <a href="{{ url_for('librarian.returns_page') }}"
+                        class="flex items-center gap-3 px-3 py-2.5 text-slate-500 hover:bg-slate-50 hover:text-slate-700 rounded-lg font-medium text-sm transition-colors">
                         <i class="fa-solid fa-book-arrow-left w-5 text-center"></i> Trả sách
                     </a>
-                    <a href="{{ url_for('librarian.workspace') }}#transactions" class="flex items-center gap-3 px-3 py-2.5 text-slate-500 hover:bg-slate-50 hover:text-slate-700 rounded-lg font-medium text-sm transition-colors">
+                    <a href="{{ url_for('librarian.workspace') }}#transactions"
+                        class="flex items-center gap-3 px-3 py-2.5 text-slate-500 hover:bg-slate-50 hover:text-slate-700 rounded-lg font-medium text-sm transition-colors">
                         <i class="fa-solid fa-file-invoice w-5 text-center"></i> Quản lý phiếu mượn
                     </a>
-                    <a href="{{ url_for('librarian.readers_page') }}" class="flex items-center gap-3 px-3 py-2.5 text-slate-500 hover:bg-slate-50 hover:text-slate-700 rounded-lg font-medium text-sm transition-colors">
+                    <a href="{{ url_for('librarian.readers_page') }}"
+                        class="flex items-center gap-3 px-3 py-2.5 text-slate-500 hover:bg-slate-50 hover:text-slate-700 rounded-lg font-medium text-sm transition-colors">
                         <i class="fa-solid fa-users-gear w-5 text-center"></i> Quản lý độc giả
                     </a>
-                    <a href="{{ url_for('reports.reports_page') }}" class="flex items-center gap-3 px-3 py-2.5 text-slate-500 hover:bg-slate-50 rounded-lg text-sm">
+                    <a href="{{ url_for('reports.reports_page') }}"
+                        class="flex items-center gap-3 px-3 py-2.5 text-slate-500 hover:bg-slate-50 rounded-lg text-sm">
                         <i class="fa-solid fa-chart-line w-5 text-center"></i> Báo cáo thống kê
                     </a>
-                    <a href="{{ url_for('librarian.books_page') }}" class="flex items-center gap-3 px-3 py-2.5 text-slate-500 hover:bg-slate-50 hover:text-slate-700 rounded-lg font-medium text-sm transition-colors">
+                    <a href="{{ url_for('librarian.books_page') }}"
+                        class="flex items-center gap-3 px-3 py-2.5 text-slate-500 hover:bg-slate-50 hover:text-slate-700 rounded-lg font-medium text-sm transition-colors">
                         <i class="fa-solid fa-warehouse w-5 text-center"></i> Tra cứu kho sách
                     </a>
-                    <a href="{{ url_for('librarian.fines_page') }}" class="flex items-center gap-3 px-3 py-2.5 text-slate-500 hover:bg-slate-50 hover:text-slate-700 rounded-lg font-medium text-sm transition-colors">
+                    <a href="{{ url_for('librarian.fines_page') }}"
+                        class="flex items-center gap-3 px-3 py-2.5 text-slate-500 hover:bg-slate-50 hover:text-slate-700 rounded-lg font-medium text-sm transition-colors">
                         <i class="fa-solid fa-triangle-exclamation w-5 text-center"></i> Sách quá hạn
                     </a>
                 </nav>
@@ -61,14 +75,16 @@
         <!-- User Profile Footer -->
         <div class="p-4 border-t border-slate-100">
             <div class="flex items-center gap-3 px-2">
-                <div class="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-sm uppercase">
+                <div
+                    class="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-sm uppercase">
                     {{ username[0] }}
                 </div>
                 <div class="flex-1 min-w-0">
                     <p class="text-sm font-bold text-slate-700 truncate">{{ username }}</p>
                     <p class="text-xs text-slate-500 truncate">Thủ thư</p>
                 </div>
-                <a href="{{ url_for('auth.logout') }}" class="text-slate-400 hover:text-red-500 transition-colors" title="Đăng xuất">
+                <a href="{{ url_for('auth.logout') }}" class="text-slate-400 hover:text-red-500 transition-colors"
+                    title="Đăng xuất">
                     <i class="fa-solid fa-arrow-right-from-bracket"></i>
                 </a>
             </div>
@@ -78,26 +94,31 @@
     <!-- Main Workspace Area -->
     <main class="flex-1 flex flex-col h-screen overflow-y-auto">
         <!-- Top Action Bar -->
-        <header class="h-16 flex items-center justify-between px-8 bg-white/50 backdrop-blur-sm sticky top-0 z-10 border-b border-slate-100">
+        <header
+            class="h-16 flex items-center justify-between px-8 bg-white/50 backdrop-blur-sm sticky top-0 z-10 border-b border-slate-100">
             <h1 class="text-sm font-bold text-slate-600 uppercase tracking-wider">Bàn làm việc thủ thư</h1>
             <div class="flex items-center gap-3">
-                <a href="{{ url_for('librarian.returns_page') }}" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-4 py-2 rounded-lg transition-colors shadow-sm flex items-center gap-2">
+                <a href="{{ url_for('librarian.returns_page') }}"
+                    class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-4 py-2 rounded-lg transition-colors shadow-sm flex items-center gap-2">
                     <i class="fa-solid fa-plus"></i> Nhận trả
                 </a>
-                <a href="{{ url_for('librarian.borrow_page') }}" class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-4 py-2 rounded-lg transition-colors shadow-sm flex items-center gap-2">
+                <a href="{{ url_for('librarian.borrow_page') }}"
+                    class="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-4 py-2 rounded-lg transition-colors shadow-sm flex items-center gap-2">
                     <i class="fa-solid fa-plus"></i> Tạo phiếu mượn
                 </a>
             </div>
         </header>
 
         <div class="p-4 md:p-8 max-w-7xl mx-auto w-full">
-            
+
             <!-- Statistics Widgets Grid[cite: 24] -->
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6 mb-8">
                 <!-- Bản sao khả dụng -->
-                <div class="bg-white p-5 rounded-xl border border-slate-100 shadow-sm flex items-center justify-between">
+                <div
+                    class="bg-white p-5 rounded-xl border border-slate-100 shadow-sm flex items-center justify-between">
                     <div>
-                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Bản sao khả dụng</p>
+                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Bản sao khả dụng
+                        </p>
                         <span class="text-3xl font-bold text-slate-800">{{ stats.available_copies }}</span>
                     </div>
                     <div class="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center text-xl">
@@ -106,29 +127,35 @@
                 </div>
 
                 <!-- Đang mượn -->
-                <div class="bg-white p-5 rounded-xl border border-slate-100 shadow-sm flex items-center justify-between">
+                <div
+                    class="bg-white p-5 rounded-xl border border-slate-100 shadow-sm flex items-center justify-between">
                     <div>
                         <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Đang mượn</p>
                         <span class="text-3xl font-bold text-slate-800">{{ stats.active_loans }}</span>
                     </div>
-                    <div class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl">
+                    <div
+                        class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center text-xl">
                         <i class="fa-solid fa-book-open-reader"></i>
                     </div>
                 </div>
 
                 <!-- Cần trả hôm nay -->
-                <div class="bg-white p-5 rounded-xl border border-slate-100 shadow-sm flex items-center justify-between">
+                <div
+                    class="bg-white p-5 rounded-xl border border-slate-100 shadow-sm flex items-center justify-between">
                     <div>
-                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Cần trả hôm nay</p>
+                        <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Cần trả hôm nay
+                        </p>
                         <span class="text-3xl font-bold text-slate-800">{{ stats.due_today }}</span>
                     </div>
-                    <div class="w-12 h-12 rounded-xl bg-orange-50 text-orange-500 flex items-center justify-center text-xl">
+                    <div
+                        class="w-12 h-12 rounded-xl bg-orange-50 text-orange-500 flex items-center justify-center text-xl">
                         <i class="fa-regular fa-clock"></i>
                     </div>
                 </div>
 
                 <!-- Sách quá hạn -->
-                <div class="bg-white p-5 rounded-xl border border-slate-100 shadow-sm flex items-center justify-between">
+                <div
+                    class="bg-white p-5 rounded-xl border border-slate-100 shadow-sm flex items-center justify-between">
                     <div>
                         <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Sách quá hạn</p>
                         <span class="text-3xl font-bold text-slate-800">{{ stats.overdue_books }}</span>
@@ -141,20 +168,23 @@
 
             <!-- Core Component: Transaction Table[cite: 24] -->
             <div id="transactions" class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
-                <div class="p-6 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div
+                    class="p-6 border-b border-slate-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                     <div>
                         <h3 class="font-bold text-slate-800 text-base">Giao dịch cần xử lý</h3>
                         <p class="text-xs text-slate-500">Các phiếu mượn gần đây trong hệ thống</p>
                     </div>
                     <div class="flex items-center gap-2 w-full sm:w-auto">
-                        <input id="transactionSearch" type="text" placeholder="Tìm mã phiếu, độc giả..." class="px-3 py-1.5 border border-slate-200 rounded-lg text-xs focus:outline-none focus:border-blue-500 w-full sm:w-64">
+                        <input id="transactionSearch" type="text" placeholder="Tìm mã phiếu, độc giả..."
+                            class="px-3 py-1.5 border border-slate-200 rounded-lg text-xs focus:outline-none focus:border-blue-500 w-full sm:w-64">
                     </div>
                 </div>
 
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse">
                         <thead>
-                            <tr class="bg-slate-50/70 text-[11px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100">
+                            <tr
+                                class="bg-slate-50/70 text-[11px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100">
                                 <th class="py-3 px-6">Mã phiếu</th>
                                 <th class="py-3 px-6">Độc giả</th>
                                 <th class="py-3 px-6">Sách</th>
@@ -173,12 +203,14 @@
                                 <td class="py-4 px-6 text-slate-500 text-xs">{{ tx.borrow_date }}</td>
                                 <td class="py-4 px-6 text-slate-500 text-xs">{{ tx.due_date }}</td>
                                 <td class="py-4 px-6">
-                                    <span class="inline-block px-2.5 py-1 rounded-full text-xs font-semibold {{ tx.status_color }}">
+                                    <span
+                                        class="inline-block px-2.5 py-1 rounded-full text-xs font-semibold {{ tx.status_color }}">
                                         {{ tx.status }}
                                     </span>
                                 </td>
                                 <td class="py-4 px-6 text-right">
-                                    <a href="{{ url_for('librarian.returns_page') }}?loan_id={{ tx.loan_id }}" class="text-xs font-semibold text-blue-600 bg-blue-50 hover:bg-blue-600 hover:text-white px-3 py-1.5 rounded-lg transition-colors">
+                                    <a href="{{ url_for('librarian.returns_page') }}?loan_id={{ tx.loan_id }}"
+                                        class="text-xs font-semibold text-blue-600 bg-blue-50 hover:bg-blue-600 hover:text-white px-3 py-1.5 rounded-lg transition-colors">
                                         {{ tx.action }}
                                     </a>
                                 </td>
@@ -187,17 +219,18 @@
                         </tbody>
                     </table>
                 </div>
-                
+
                 <!-- Table Footer pagination info -->
                 <div class="p-4 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
                     <span>Hiển thị {{ transactions|length }} giao dịch gần đây</span>
 
                 </div>
             </div>
-            
+
             <div class="h-8"></div>
         </div>
     </main>
-<script>document.getElementById("transactionSearch")?.addEventListener("input", event => { const value = event.target.value.toLocaleLowerCase(); document.querySelectorAll("#transactionRows tr").forEach(row => { row.hidden = !row.textContent.toLocaleLowerCase().includes(value); }); });</script>
+    <script>document.getElementById("transactionSearch")?.addEventListener("input", event => { const value = event.target.value.toLocaleLowerCase(); document.querySelectorAll("#transactionRows tr").forEach(row => { row.hidden = !row.textContent.toLocaleLowerCase().includes(value); }); });</script>
 </body>
+
 </html>

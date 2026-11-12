@@ -29,7 +29,7 @@ class BookRepository:
                 f"""SELECT * FROM books
                     WHERE (title LIKE %s OR author LIKE %s OR book_code LIKE %s)
                     {active_filter}
-                    ORDER BY title LIMIT 200""",
+                    ORDER BY created_at DESC, title LIMIT 200""",
                 (pattern, pattern, pattern),
             )
             return [map_to_book(row) for row in cursor.fetchall()]
@@ -179,3 +179,57 @@ class BookRepository:
             "INSERT INTO book_copies (copy_id, book_code, `condition`, status) VALUES (%s, %s, 'NORMAL', 'AVAILABLE')",
             [(f"CP-{uuid4().hex[:14].upper()}", book_code) for _ in range(quantity)],
         )
+
+
+    def activate(self, book_code: str) -> tuple[bool, str]:
+        db = get_db_connection()
+        cursor = db.cursor()
+        try:
+            db.start_transaction()
+            cursor.execute("SELECT book_code, is_active FROM books WHERE book_code=%s FOR UPDATE", (book_code,))
+            book = cursor.fetchone()
+            if not book:
+                db.rollback()
+                return False, "Không tìm thấy đầu sách."
+            cursor.execute("UPDATE books SET is_active=TRUE WHERE book_code=%s", (book_code,))
+            db.commit()
+            return True, "Đã mở lại đầu sách trong danh mục."
+        except Exception:
+            db.rollback()
+            raise
+        finally:
+            cursor.close()
+
+    def delete(self, book_code: str) -> tuple[bool, str]:
+        db = get_db_connection()
+        cursor = db.cursor(dictionary=True)
+        try:
+            db.start_transaction()
+            cursor.execute("SELECT book_code FROM books WHERE book_code=%s FOR UPDATE", (book_code,))
+            if not cursor.fetchone():
+                db.rollback()
+                return False, "Không tìm thấy đầu sách."
+
+            cursor.execute(
+                """SELECT COUNT(*) AS total
+                   FROM borrowing_details bd
+                   JOIN book_copies bc ON bc.copy_id=bd.copy_id
+                   WHERE bc.book_code=%s""",
+                (book_code,),
+            )
+            if int(cursor.fetchone()["total"]) > 0:
+                db.rollback()
+                return False, "Đầu sách đã có lịch sử mượn/trả. Không thể xóa để bảo toàn lịch sử; hãy ngừng kinh doanh thay thế."
+
+            cursor.execute("DELETE FROM book_copies WHERE book_code=%s", (book_code,))
+            cursor.execute("DELETE FROM books WHERE book_code=%s", (book_code,))
+            if cursor.rowcount != 1:
+                db.rollback()
+                return False, "Không thể xóa đầu sách."
+            db.commit()
+            return True, "Đã xóa đầu sách và các bản sao chưa phát sinh giao dịch."
+        except Exception:
+            db.rollback()
+            raise
+        finally:
+            cursor.close()

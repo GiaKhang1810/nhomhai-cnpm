@@ -6,6 +6,8 @@ from datetime import date
 from typing import Any
 from uuid import uuid4
 
+from flask import current_app
+
 from source.core.security import hash_password
 from source.repositories.reader_repository import ReaderRepository
 
@@ -14,8 +16,9 @@ class ReaderService:
     def __init__(self) -> None:
         self.reader_repo = ReaderRepository()
 
-    def search_readers(self, keyword: str):
-        return self.reader_repo.search_readers(keyword) if keyword.strip() else []
+    def search_readers(self, keyword: str = ""):
+        # An empty keyword intentionally returns the latest reader directory.
+        return self.reader_repo.search_readers(keyword or "")
 
     def create_new_reader(self, data: dict[str, Any]) -> tuple[bool, str]:
         required = ("full_name", "identity_number", "email", "username", "password")
@@ -58,6 +61,7 @@ class ReaderService:
         except ValueError:
             return False, "Ngày sinh không hợp lệ."
         except Exception:
+            current_app.logger.exception("Tạo độc giả thất bại")
             return False, "Không thể tạo độc giả. Username, email hoặc số giấy tờ có thể đã tồn tại."
 
     def update_reader(self, reader_id: str, data: dict[str, Any]) -> tuple[bool, str]:
@@ -100,3 +104,10 @@ class ReaderService:
 
     def deactivate_reader(self, reader_id: str) -> tuple[bool, str]:
         return self.reader_repo.deactivate_reader(reader_id)
+
+
+    def activate_reader(self, reader_id: str) -> tuple[bool, str]:
+        return self.reader_repo.activate_reader(reader_id)
+
+    def delete_reader(self, reader_id: str) -> tuple[bool, str]:
+        return self.reader_repo.delete_reader(reader_id)

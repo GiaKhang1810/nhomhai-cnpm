@@ -1,1 +1,51 @@
-<!doctype html><html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Lịch sử mượn sách | Libra</title><script src="https://cdn.tailwindcss.com"></script></head><body class="min-h-screen bg-slate-50 text-slate-800"><header class="bg-white border-b"><div class="max-w-6xl mx-auto p-5"><a href="{{ url_for('profile.dashboard') }}" class="text-sm text-blue-600">← Trang độc giả</a><h1 class="text-2xl font-bold mt-1">Lịch sử mượn sách</h1><p class="text-sm text-slate-500">{{ username }}</p></div></header><main class="max-w-6xl mx-auto p-5"><section class="bg-white border rounded-2xl p-5 overflow-x-auto"><table class="w-full text-sm"><thead><tr class="text-left text-slate-500 border-b"><th class="py-3">Mã phiếu</th><th>Sách</th><th>Ngày mượn</th><th>Hạn trả</th><th>Ngày trả</th><th>Trạng thái</th><th>Phí phát sinh</th></tr></thead><tbody>{% for row in records %}<tr class="border-b last:border-0"><td class="py-3 font-medium">{{ row.loan_id }}</td><td>{{ row.title }}<div class="text-xs text-slate-400">{{ row.author }}</div></td><td>{{ row.borrow_date.strftime('%d/%m/%Y') }}</td><td>{{ row.due_date.strftime('%d/%m/%Y') }}</td><td>{{ row.return_date.strftime('%d/%m/%Y') if row.return_date else '—' }}</td><td>{{ {'BORROWED':'Đang mượn','RETURNED':'Đã trả','OVERDUE':'Quá hạn'}.get(row.status,row.status) }}</td><td>{{ '{:,.0f}'.format((row.overdue_fine or 0)+(row.compensation or 0)) }} VND</td></tr>{% else %}<tr><td colspan="7" class="py-8 text-center text-slate-400">Bạn chưa có lịch sử mượn sách.</td></tr>{% endfor %}</tbody></table></section></main></body></html>
+<!doctype html>
+<html lang="vi">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Lịch sử mượn sách | Libra</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="min-h-screen bg-slate-50 text-slate-800">
+    <header class="bg-white border-b">
+        <div class="max-w-6xl mx-auto p-5"><a href="{{ url_for('profile.dashboard') }}" class="text-sm text-blue-600">←
+                Trang độc giả</a>
+            <h1 class="text-2xl font-bold mt-1">Lịch sử mượn sách</h1>
+            <p class="text-sm text-slate-500">{{ username }}</p>
+        </div>
+    </header>
+    <main class="max-w-6xl mx-auto p-5">
+        <section class="bg-white border rounded-2xl p-5 overflow-x-auto">
+            <table class="w-full text-sm">
+                <thead>
+                    <tr class="text-left text-slate-500 border-b">
+                        <th class="py-3">Mã phiếu</th>
+                        <th>Sách</th>
+                        <th>Ngày mượn</th>
+                        <th>Hạn trả</th>
+                        <th>Ngày trả</th>
+                        <th>Trạng thái</th>
+                        <th>Phí phát sinh</th>
+                    </tr>
+                </thead>
+                <tbody>{% for row in records %}<tr class="border-b last:border-0">
+                        <td class="py-3 font-medium">{{ row.loan_id }}</td>
+                        <td>{{ row.title }}<div class="text-xs text-slate-400">{{ row.author }}</div>
+                        </td>
+                        <td>{{ row.borrow_date.strftime('%d/%m/%Y') }}</td>
+                        <td>{{ row.due_date.strftime('%d/%m/%Y') }}</td>
+                        <td>{{ row.return_date.strftime('%d/%m/%Y') if row.return_date else '—' }}</td>
+                        <td>{{ {'BORROWED':'Đang mượn','RETURNED':'Đã trả','OVERDUE':'Quá
+                            hạn'}.get(row.status,row.status) }}</td>
+                        <td>{{ '{:,.0f}'.format((row.overdue_fine or 0)+(row.compensation or 0)) }} VND</td>
+                    </tr>{% else %}<tr>
+                        <td colspan="7" class="py-8 text-center text-slate-400">Bạn chưa có lịch sử mượn sách.</td>
+                    </tr>{% endfor %}</tbody>
+            </table>
+        </section>
+    </main>
+</body>
+
+</html>

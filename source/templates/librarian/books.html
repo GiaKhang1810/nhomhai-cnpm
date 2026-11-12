@@ -48,7 +48,8 @@
                 <h2 class="font-semibold text-lg">Danh mục sách</h2>
                 <div class="flex gap-2"><input id="bookSearch" placeholder="Tên sách, tác giả, mã sách..."
                         class="border rounded-lg px-3 py-2 text-sm"><button id="searchBooks"
-                        class="bg-slate-800 text-white rounded-lg px-4 text-sm">Tìm</button></div>
+                        class="bg-slate-800 text-white rounded-lg px-4 text-sm">Tìm</button><button id="reloadBooks"
+                        type="button" class="border rounded-lg px-3 text-sm">Tải lại</button></div>
             </div>
             <div class="overflow-x-auto">
                 <table class="w-full text-sm">
@@ -59,12 +60,13 @@
                             <th>Tác giả</th>
                             <th>Khả dụng</th>
                             <th>Giá trị</th>
+                            <th>Trạng thái</th>
                             <th></th>
                         </tr>
                     </thead>
                     <tbody id="bookRows">
                         <tr>
-                            <td colspan="6" class="py-6 text-center text-slate-400">Đang tải...</td>
+                            <td colspan="7" class="py-6 text-center text-slate-400">Đang tải...</td>
                         </tr>
                     </tbody>
                 </table>
@@ -72,7 +74,7 @@
             <p id="bookListMessage" class="text-sm text-slate-500 mt-3"></p>
         </section>
     </main>
-    <script src="{{ url_for('static', filename='js/books.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/books.js', v='20261112-3') }}"></script>
 </body>
 
 </html>

@@ -1,8 +1,70 @@
-<!doctype html><html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Quản lý độc giả | Libra</title><script src="https://cdn.tailwindcss.com"></script></head>
-<body class="min-h-screen bg-slate-50 text-slate-800"><header class="bg-white border-b"><div class="max-w-7xl mx-auto px-5 py-4"><a href="{{ (url_for('admin.dashboard') if role == 'ADMIN' else url_for('librarian.workspace')) }}" class="text-sm text-blue-600">← Bàn làm việc</a><h1 class="text-2xl font-bold mt-1">Quản lý độc giả</h1></div></header>
-<main class="max-w-7xl mx-auto p-5 grid lg:grid-cols-[360px_1fr] gap-5"><section class="bg-white rounded-2xl border p-5 h-fit"><h2 class="text-lg font-semibold mb-4">Tạo thẻ độc giả</h2><form id="readerForm" class="space-y-3">
-{% for name,label,typ in [('full_name','Họ và tên','text'),('identity_number','Số giấy tờ','text'),('email','Email','email'),('username','Tên đăng nhập','text'),('password','Mật khẩu','password'),('phone','Số điện thoại','tel')] %}<label class="block text-sm">{{ label }}<input name="{{ name }}" type="{{ typ }}" {% if name in ['full_name','identity_number','email','username','password'] %}required{% endif %} class="mt-1 w-full border rounded-lg p-2"></label>{% endfor %}
-<label class="block text-sm">Ngày sinh<input name="dob" type="date" class="mt-1 w-full border rounded-lg p-2"></label><label class="block text-sm">Giới tính<select name="gender" class="mt-1 w-full border rounded-lg p-2"><option value="">Chưa cung cấp</option><option value="MALE">Nam</option><option value="FEMALE">Nữ</option><option value="OTHER">Khác</option></select></label>
-<button class="w-full bg-blue-600 text-white rounded-lg py-2.5 font-semibold">Tạo độc giả</button><p id="readerMessage" class="text-sm" aria-live="polite"></p></form></section>
-<section class="bg-white rounded-2xl border p-5"><div class="flex gap-2 mb-4"><input id="readerSearch" placeholder="Mã, tên hoặc số giấy tờ" class="border rounded-lg px-3 py-2 text-sm flex-1"><button id="searchReaders" class="bg-slate-800 text-white rounded-lg px-4 text-sm">Tìm</button></div><div class="overflow-x-auto"><table class="w-full text-sm"><thead><tr class="text-left text-slate-500 border-b"><th class="py-3">Mã độc giả</th><th>Họ tên</th><th>Số giấy tờ</th><th>Hết hạn</th><th>Trạng thái</th><th></th></tr></thead><tbody id="readerRows"><tr><td colspan="6" class="py-6 text-center text-slate-400">Nhập từ khóa để tìm độc giả.</td></tr></tbody></table></div></section></main>
-<script src="{{ url_for('static', filename='js/readers.js') }}"></script></body></html>
+<!doctype html>
+<html lang="vi">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Quản lý độc giả | Libra</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="min-h-screen bg-slate-50 text-slate-800">
+    <header class="bg-white border-b">
+        <div class="max-w-7xl mx-auto px-5 py-4"><a
+                href="{{ (url_for('admin.dashboard') if role == 'ADMIN' else url_for('librarian.workspace')) }}"
+                class="text-sm text-blue-600">← Bàn làm việc</a>
+            <h1 class="text-2xl font-bold mt-1">Quản lý độc giả</h1>
+        </div>
+    </header>
+    <main class="max-w-7xl mx-auto p-5 grid lg:grid-cols-[360px_1fr] gap-5">
+        <section class="bg-white rounded-2xl border p-5 h-fit">
+            <h2 class="text-lg font-semibold mb-4">Tạo thẻ độc giả</h2>
+            <form id="readerForm" class="space-y-3">
+                {% for name,label,typ in [('full_name','Họ và tên','text'),('identity_number','Số giấy
+                tờ','text'),('email','Email','email'),('username','Tên đăng nhập','text'),('password','Mật
+                khẩu','password'),('phone','Số điện thoại','tel')] %}<label class="block text-sm">{{ label }}<input
+                        name="{{ name }}" type="{{ typ }}" {% if name in
+                        ['full_name','identity_number','email','username','password'] %}required{% endif %}
+                        class="mt-1 w-full border rounded-lg p-2"></label>{% endfor %}
+                <label class="block text-sm">Ngày sinh<input name="dob" type="date"
+                        class="mt-1 w-full border rounded-lg p-2"></label><label class="block text-sm">Giới tính<select
+                        name="gender" class="mt-1 w-full border rounded-lg p-2">
+                        <option value="">Chưa cung cấp</option>
+                        <option value="MALE">Nam</option>
+                        <option value="FEMALE">Nữ</option>
+                        <option value="OTHER">Khác</option>
+                    </select></label>
+                <button class="w-full bg-blue-600 text-white rounded-lg py-2.5 font-semibold">Tạo độc giả</button>
+                <p id="readerMessage" class="text-sm" aria-live="polite"></p>
+            </form>
+        </section>
+        <section class="bg-white rounded-2xl border p-5">
+            <div class="flex gap-2 mb-4"><input id="readerSearch" placeholder="Mã, tên hoặc số giấy tờ"
+                    class="border rounded-lg px-3 py-2 text-sm flex-1"><button id="searchReaders"
+                    class="bg-slate-800 text-white rounded-lg px-4 text-sm">Tìm</button><button id="reloadReaders"
+                    type="button" class="border rounded-lg px-3 text-sm">Tải lại</button></div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="text-left text-slate-500 border-b">
+                            <th class="py-3">Mã độc giả</th>
+                            <th>Họ tên</th>
+                            <th>Số giấy tờ</th>
+                            <th>Hết hạn</th>
+                            <th>Trạng thái</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody id="readerRows">
+                        <tr>
+                            <td colspan="6" class="py-6 text-center text-slate-400">Nhập từ khóa để tìm độc giả.</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+    <script src="{{ url_for('static', filename='js/readers.js', v='20261112-3') }}"></script>
+</body>
+
+</html>

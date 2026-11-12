@@ -11,7 +11,9 @@ account_service = AccountService()
 @login_required
 @role_required("ADMIN")
 def list_staff():
-    return jsonify({"success": True, "data": account_service.list_staff_accounts()})
+    response = jsonify({"success": True, "data": account_service.list_staff_accounts()})
+    response.headers["Cache-Control"] = "no-store, max-age=0"
+    return response
 
 
 @accounts_bp.post("/")
@@ -20,7 +22,10 @@ def list_staff():
 def create_staff():
     data = request.get_json(silent=True) or {}
     success, message = account_service.create_staff_account(data)
-    return jsonify({"success": success, "message": message}), 201 if success else 400
+    response = jsonify({"success": success, "message": message})
+    response.status_code = 201 if success else 400
+    response.headers["Cache-Control"] = "no-store, max-age=0"
+    return response
 
 
 @accounts_bp.put("/<int:user_id>")
@@ -31,7 +36,10 @@ def update_staff(user_id: int):
     if user_id == session.get("user_id") and data.get("role"):
         return jsonify({"success": False, "message": "Không thể tự thay đổi vai trò tài khoản đang sử dụng."}), 400
     success, message = account_service.update_staff_account(user_id, data)
-    return jsonify({"success": success, "message": message}), 200 if success else 400
+    response = jsonify({"success": success, "message": message})
+    response.status_code = 200 if success else 400
+    response.headers["Cache-Control"] = "no-store, max-age=0"
+    return response
 
 
 @accounts_bp.patch("/<int:user_id>/deactivate")
@@ -40,3 +48,25 @@ def update_staff(user_id: int):
 def deactivate_staff(user_id: int):
     success, message = account_service.deactivate_staff_account(user_id, int(session["user_id"]))
     return jsonify({"success": success, "message": message}), 200 if success else 400
+
+
+@accounts_bp.patch("/<int:user_id>/activate")
+@login_required
+@role_required("ADMIN")
+def activate_staff(user_id: int):
+    success, message = account_service.activate_staff_account(user_id)
+    response = jsonify({"success": success, "message": message})
+    response.status_code = 200 if success else 400
+    response.headers["Cache-Control"] = "no-store, max-age=0"
+    return response
+
+
+@accounts_bp.delete("/<int:user_id>")
+@login_required
+@role_required("ADMIN")
+def delete_staff(user_id: int):
+    success, message = account_service.delete_staff_account(user_id, int(session["user_id"]))
+    response = jsonify({"success": success, "message": message})
+    response.status_code = 200 if success else 400
+    response.headers["Cache-Control"] = "no-store, max-age=0"
+    return response

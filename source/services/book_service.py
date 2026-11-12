@@ -3,6 +3,8 @@ from __future__ import annotations
 from decimal import Decimal, InvalidOperation
 from typing import Any, Optional
 
+from flask import current_app
+
 from source.domain.entities.book import Book
 from source.repositories.book_repository import BookRepository
 
@@ -11,8 +13,8 @@ class BookService:
     def __init__(self) -> None:
         self.book_repo = BookRepository()
 
-    def search_books(self, keyword: str) -> list[Book]:
-        return self.book_repo.search_books(keyword)
+    def search_books(self, keyword: str, *, include_inactive: bool = False) -> list[Book]:
+        return self.book_repo.search_books(keyword, include_inactive=include_inactive)
 
     def get_book_details(self, book_code: str) -> Optional[Book]:
         return self.book_repo.get_by_code(book_code)
@@ -52,6 +54,7 @@ class BookService:
         except (ValueError, TypeError, InvalidOperation):
             return False, "Thông tin số lượng, năm xuất bản hoặc giá trị sách không hợp lệ."
         except Exception:
+            current_app.logger.exception("Tạo đầu sách thất bại")
             return False, "Không thể lưu sách. Vui lòng kiểm tra mã sách và kết nối cơ sở dữ liệu."
 
     def update_book(self, book_code: str, data: dict[str, Any]) -> tuple[bool, str]:
@@ -83,3 +86,10 @@ class BookService:
 
     def deactivate_book(self, book_code: str) -> tuple[bool, str]:
         return self.book_repo.deactivate(book_code)
+
+
+    def activate_book(self, book_code: str) -> tuple[bool, str]:
+        return self.book_repo.activate(book_code)
+
+    def delete_book(self, book_code: str) -> tuple[bool, str]:
+        return self.book_repo.delete(book_code)

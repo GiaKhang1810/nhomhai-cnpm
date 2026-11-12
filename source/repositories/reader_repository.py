@@ -35,7 +35,7 @@ class ReaderRepository:
             cursor.execute(
                 """SELECT * FROM readers
                    WHERE reader_id LIKE %s OR full_name LIKE %s OR identity_number LIKE %s
-                   ORDER BY full_name LIMIT 200""",
+                   ORDER BY created_at DESC, full_name LIMIT 200""",
                 (pattern, pattern, pattern),
             )
             return [Reader(**row) for row in cursor.fetchall()]
@@ -145,6 +145,74 @@ class ReaderRepository:
             cursor.execute("UPDATE users SET account_status='INACTIVE' WHERE user_id=%s", (reader["user_id"],))
             db.commit()
             return True, "Đã ngừng hoạt động thẻ độc giả."
+        except Exception:
+            db.rollback()
+            raise
+        finally:
+            cursor.close()
+
+
+    def activate_reader(self, reader_id: str) -> tuple[bool, str]:
+        db = get_db_connection()
+        cursor = db.cursor(dictionary=True)
+        try:
+            db.start_transaction()
+            cursor.execute(
+                "SELECT user_id, card_expiry_date, account_status FROM readers WHERE reader_id=%s FOR UPDATE",
+                (reader_id,),
+            )
+            reader = cursor.fetchone()
+            if not reader:
+                db.rollback()
+                return False, "Không tìm thấy độc giả."
+            cursor.execute("SELECT CURRENT_DATE AS today")
+            today = cursor.fetchone()["today"]
+            if reader["card_expiry_date"] < today:
+                db.rollback()
+                return False, "Thẻ độc giả đã hết hạn. Hãy cập nhật ngày hết hạn trước khi mở khóa."
+            cursor.execute("UPDATE readers SET account_status='ACTIVE' WHERE reader_id=%s", (reader_id,))
+            cursor.execute("UPDATE users SET account_status='ACTIVE' WHERE user_id=%s", (reader["user_id"],))
+            db.commit()
+            return True, "Đã mở khóa thẻ và tài khoản độc giả."
+        except Exception:
+            db.rollback()
+            raise
+        finally:
+            cursor.close()
+
+    def delete_reader(self, reader_id: str) -> tuple[bool, str]:
+        db = get_db_connection()
+        cursor = db.cursor(dictionary=True)
+        try:
+            db.start_transaction()
+            cursor.execute("SELECT user_id FROM readers WHERE reader_id=%s FOR UPDATE", (reader_id,))
+            reader = cursor.fetchone()
+            if not reader:
+                db.rollback()
+                return False, "Không tìm thấy độc giả."
+
+            cursor.execute(
+                "SELECT COUNT(*) AS total FROM borrowing_records WHERE reader_id=%s",
+                (reader_id,),
+            )
+            if int(cursor.fetchone()["total"]) > 0:
+                db.rollback()
+                return False, "Độc giả đã có lịch sử mượn sách. Không thể xóa để bảo toàn lịch sử; hãy khóa thẻ thay thế."
+
+            cursor.execute(
+                "SELECT COUNT(*) AS total FROM fine_payments WHERE received_by=%s",
+                (reader["user_id"],),
+            )
+            if int(cursor.fetchone()["total"]) > 0:
+                db.rollback()
+                return False, "Tài khoản có lịch sử nhận thanh toán và không thể xóa."
+
+            cursor.execute("DELETE FROM users WHERE user_id=%s", (reader["user_id"],))
+            if cursor.rowcount != 1:
+                db.rollback()
+                return False, "Không thể xóa hồ sơ độc giả."
+            db.commit()
+            return True, "Đã xóa hồ sơ và tài khoản độc giả."
         except Exception:
             db.rollback()
             raise

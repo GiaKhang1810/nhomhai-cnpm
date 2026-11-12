@@ -1,1 +1,50 @@
-<!doctype html><html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Tiền phạt và bồi thường | Libra</title><script src="https://cdn.tailwindcss.com"></script></head><body class="min-h-screen bg-slate-50"><header class="bg-white border-b p-5"><div class="max-w-6xl mx-auto"><a href="{{ url_for('librarian.workspace') }}" class="text-sm text-blue-600">← Bàn làm việc</a><h1 class="text-2xl font-bold mt-1">Tiền phạt và bồi thường</h1></div></header><main class="max-w-6xl mx-auto p-5"><section class="bg-white border rounded-2xl p-5"><div class="flex flex-wrap justify-between items-center gap-3 mb-4"><h2 class="text-lg font-semibold">Các khoản chưa thanh toán</h2><button id="reloadFines" class="border rounded-lg px-4 py-2 text-sm">Tải lại</button></div><div class="overflow-x-auto"><table class="w-full text-sm"><thead><tr class="text-left text-slate-500 border-b"><th class="py-3">Độc giả</th><th>Sách / Mã bản sao</th><th>Phạt trễ</th><th>Bồi thường</th><th>Đã trả</th><th>Còn nợ</th><th></th></tr></thead><tbody id="fineRows"><tr><td colspan="7" class="py-6 text-center text-slate-400">Đang tải...</td></tr></tbody></table></div><p id="fineMessage" class="text-sm mt-3" aria-live="polite"></p></section></main><script src="{{ url_for('static', filename='js/fines.js') }}"></script></body></html>
+<!doctype html>
+<html lang="vi">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Tiền phạt và bồi thường | Libra</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="min-h-screen bg-slate-50">
+    <header class="bg-white border-b p-5">
+        <div class="max-w-6xl mx-auto"><a href="{{ url_for('librarian.workspace') }}" class="text-sm text-blue-600">←
+                Bàn làm việc</a>
+            <h1 class="text-2xl font-bold mt-1">Tiền phạt và bồi thường</h1>
+        </div>
+    </header>
+    <main class="max-w-6xl mx-auto p-5">
+        <section class="bg-white border rounded-2xl p-5">
+            <div class="flex flex-wrap justify-between items-center gap-3 mb-4">
+                <h2 class="text-lg font-semibold">Các khoản chưa thanh toán</h2><button id="reloadFines"
+                    class="border rounded-lg px-4 py-2 text-sm">Tải lại</button>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="text-left text-slate-500 border-b">
+                            <th class="py-3">Độc giả</th>
+                            <th>Sách / Mã bản sao</th>
+                            <th>Phạt trễ</th>
+                            <th>Bồi thường</th>
+                            <th>Đã trả</th>
+                            <th>Còn nợ</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody id="fineRows">
+                        <tr>
+                            <td colspan="7" class="py-6 text-center text-slate-400">Đang tải...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <p id="fineMessage" class="text-sm mt-3" aria-live="polite"></p>
+        </section>
+    </main>
+    <script src="{{ url_for('static', filename='js/fines.js') }}"></script>
+</body>
+
+</html>
