@@ -1,185 +1,98 @@
-# Libra -- Project Structure
+# Libra — Kiến trúc dự án
 
-``` text
+Libra sử dụng Flask làm lớp HTTP, MySQL làm hệ quản trị cơ sở dữ liệu và chia nghiệp vụ theo mô hình repository/service.
+
+```text
 libra/
 ├── pyproject.toml
 ├── poetry.lock
 ├── README.md
-├── .env
 ├── .env.example
 ├── .gitignore
-│
+├── docs/
+│   └── ARCHITECTURE.md
 ├── migrations/
-│   ├── versions/
-│   └── schema.sql
-│
-├── source/
-│   ├── __init__.py
-│   ├── app.py
-│   ├── extensions.py
-│   │
-│   ├── config/
-│   │   ├── __init__.py
-│   │   ├── settings.py
-│   │   └── logging.py
-│   │
-│   ├── core/
-│   │   ├── __init__.py
-│   │   ├── exceptions.py
-│   │   ├── security.py
-│   │   ├── permissions.py
-│   │   ├── decorators.py
-│   │   └── constants.py
-│   │
-│   ├── database/
-│   │   ├── __init__.py
-│   │   ├── connection.py
-│   │   ├── transaction.py
-│   │   └── row_mapper.py
-│   │
-│   ├── domain/
-│   │   ├── __init__.py
-│   │   ├── entities/
-│   │   ├── enums/
-│   │   ├── rules/
-│   │   └── interfaces/
-│   │
-│   ├── repositories/
-│   │   ├── __init__.py
-│   │   ├── book_repository.py
-│   │   ├── reader_repository.py
-│   │   ├── book_copy_repository.py
-│   │   ├── loan_repository.py
-│   │   ├── return_repository.py
-│   │   ├── fine_repository.py
-│   │   ├── account_repository.py
-│   │   └── report_repository.py
-│   │
-│   ├── services/
-│   │   ├── __init__.py
-│   │   ├── auth_service.py
-│   │   ├── book_service.py
-│   │   ├── reader_service.py
-│   │   ├── borrowing_service.py
-│   │   ├── return_service.py
-│   │   ├── fine_service.py
-│   │   ├── account_service.py
-│   │   └── report_service.py
-│   │
-│   ├── web/
-│   │   ├── __init__.py
-│   │   ├── middleware.py
-│   │   ├── errors.py
-│   │   │
-│   │   ├── routes/
-│   │   │   ├── __init__.py
-│   │   │   ├── auth.py
-│   │   │   ├── books.py
-│   │   │   ├── readers.py
-│   │   │   ├── borrowing.py
-│   │   │   ├── returns.py
-│   │   │   ├── fines.py
-│   │   │   ├── accounts.py
-│   │   │   ├── reports.py
-│   │   │   └── profile.py
-│   │   │
-│   │   └── validators/
-│   │       ├── __init__.py
-│   │       ├── book_validator.py
-│   │       ├── reader_validator.py
-│   │       └── borrowing_validator.py
-│   │
-│   ├── templates/
-│   │   ├── layouts/
-│   │   ├── components/
-│   │   ├── auth/
-│   │   ├── reader/
-│   │   ├── librarian/
-│   │   ├── admin/
-│   │   └── errors/
-│   │
-│   └── static/
-│       ├── css/
-│       ├── js/
-│       ├── images/
-│       └── fonts/
-│
-└── tests/
-    ├── conftest.py
-    ├── unit/
-    │   ├── test_auth_service.py
-    │   ├── test_borrowing_service.py
-    │   ├── test_return_service.py
-    │   └── test_fine_service.py
-    │
-    ├── integration/
-    │   ├── test_book_repository.py
-    │   └── test_loan_repository.py
-    │
-    └── functional/
-        ├── test_auth_routes.py
-        ├── test_book_routes.py
-        └── test_borrowing_routes.py
+│   ├── schema.sql
+│   └── versions/
+│       └── 0002_complete_library_workflows.sql
+├── scripts/
+│   └── create_admin.py
+├── tests/
+│   └── unit/
+│       └── test_core_rules.py
+└── source/
+    ├── app.py
+    ├── configs/
+    │   └── settings.py
+    ├── core/
+    │   ├── decorators.py
+    │   ├── exceptions.py
+    │   ├── money.py
+    │   └── security.py
+    ├── database/
+    │   ├── connection.py
+    │   ├── row_mapper.py
+    │   └── transaction.py
+    ├── domain/entities/
+    │   ├── book.py
+    │   ├── borrowing.py
+    │   ├── reader.py
+    │   └── user.py
+    ├── repositories/
+    │   ├── book_repository.py
+    │   ├── borrowing_repository.py
+    │   ├── fine_repository.py
+    │   ├── reader_repository.py
+    │   ├── report_repository.py
+    │   └── return_repository.py
+    ├── services/
+    │   ├── account_service.py
+    │   ├── auth_service.py
+    │   ├── book_service.py
+    │   ├── borrowing_service.py
+    │   ├── fine_service.py
+    │   ├── reader_service.py
+    │   └── return_service.py
+    ├── web/
+    │   ├── routes/
+    │   └── validators/
+    ├── templates/
+    │   ├── admin/
+    │   ├── auth/
+    │   ├── librarian/
+    │   ├── reader/
+    │   └── reports/
+    └── static/
+        ├── css/
+        └── js/
 ```
 
-## Directory responsibilities
+## Trách nhiệm các lớp
 
-  -----------------------------------------------------------------------
-  Path                                Responsibility
-  ----------------------------------- -----------------------------------
-  `migrations/`                       Database schema and migration
-                                      history.
+- `source/app.py`: khởi tạo Flask, đăng ký blueprint, quản lý vòng đời kết nối database và xử lý lỗi HTTP.
+- `source/configs/`: đọc cấu hình runtime từ biến môi trường và file `.env`.
+- `source/core/`: hàm bảo mật, phân quyền, ngoại lệ nghiệp vụ và phép tính phí.
+- `source/database/`: quản lý MySQL connection, transaction helper và ánh xạ bản ghi.
+- `source/domain/entities/`: các đối tượng nghiệp vụ Book, Reader, User và BorrowingRecord.
+- `source/repositories/`: câu lệnh SQL và thao tác lưu trữ; các thao tác nhiều bước có transaction.
+- `source/services/`: xác thực đầu vào và điều phối use case.
+- `source/web/routes/`: endpoint JSON và trang HTML được bảo vệ bằng session/role.
+- `source/templates/` và `source/static/`: giao diện Jinja và JavaScript phía trình duyệt.
+- `migrations/schema.sql`: schema khởi tạo MySQL mới, bao gồm bản sao vật lý và lịch sử thanh toán.
+- `migrations/versions/`: migration nâng cấp database đã tạo từ schema cũ; cần sao lưu trước khi áp dụng.
+- `tests/unit/`: kiểm thử logic thuần không cần MySQL.
 
-  `source/app.py`                     Flask application factory and
-                                      application setup.
+## Quy tắc lưu trữ quan trọng
 
-  `source/extensions.py`              Shared Flask extensions and
-                                      initialized integrations.
+Một bản ghi trong `books` đại diện cho đầu sách; từng bản sao vật lý được lưu trong `book_copies`. Khi giảm số lượng, bản sao khả dụng được chuyển sang `RETIRED` thay vì xóa, nhờ đó không phá vỡ các khóa ngoại tới lịch sử mượn. `books.total_quantity` và `books.available_quantity` là số lượng bản sao còn lưu hành; bản sao `BORROWED`, `DAMAGED` hoặc `LOST` vẫn nằm trong tổng số bản sao đang lưu hành, còn `RETIRED` không được tính.
 
-  `source/config/`                    Application settings and logging
-                                      configuration.
+Các khoản phí được tính trên từng `borrowing_details`. Mỗi lần thanh toán được ghi riêng trong `fine_payments` để giữ lịch sử và hỗ trợ thanh toán từng phần.
 
-  `source/core/`                      Cross-cutting concerns such as
-                                      security, permissions, exceptions,
-                                      and constants.
+## Vận hành
 
-  `source/database/`                  MySQL connection management,
-                                      transactions, and row mapping using
-                                      `mysql-connector-python`.
-
-  `source/domain/`                    Domain entities, enums, business
-                                      rules, and interfaces.
-
-  `source/repositories/`              SQL access and persistence
-                                      operations.
-
-  `source/services/`                  Application use cases and business
-                                      workflows.
-
-  `source/web/`                       HTTP middleware, error handling,
-                                      routes, and request validation.
-
-  `source/templates/`                 Jinja templates grouped by layout
-                                      and user role.
-
-  `source/static/`                    CSS, JavaScript, images, and fonts.
-
-  `tests/`                            Unit, integration, and functional
-                                      tests.
-  -----------------------------------------------------------------------
-
-## Notes
-
--   Keep secrets in `.env`; commit `.env.example` with placeholder
-    values only.
--   Keep database schema changes in `migrations/`. Avoid modifying an
-    already-applied migration; create a new migration instead.
--   Keep SQL and persistence logic in repositories. Services should
-    coordinate use cases and transactions.
--   Keep password hashing and verification in `source/core/security.py`,
-    using Flask's Werkzeug security utilities.
--   Use parameterized queries with `mysql-connector-python`; never
-    interpolate user input into SQL strings.
--   The `schema.sql` file can serve as the initial database schema. If a
-    migration tool is adopted, use it as the source of versioned schema
-    changes.
+- Copy `.env.example` thành `.env` rồi cấu hình secret và kết nối MySQL. Không commit `.env`.
+- Database mới: chạy `mysql -u root -p < migrations/schema.sql`.
+- Database cũ từ phiên bản trước: sao lưu rồi chạy `mysql -u root -p library_db < migrations/versions/0002_complete_library_workflows.sql`; không chạy migration này trên database mới.
+- Dùng `python scripts/create_admin.py` để tạo tài khoản quản trị đầu tiên.
+- Chạy `python -m source.app` để khởi động web app.
+- Chạy `python -m unittest discover -s tests -v` để chạy unit tests.

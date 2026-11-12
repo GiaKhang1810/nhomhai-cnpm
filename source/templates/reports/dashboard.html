@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="vi">
+
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Báo cáo thống kê | Libra</title>
+	<script src="https://cdn.tailwindcss.com"></script>
+	<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+
+<body class="min-h-screen bg-slate-50 text-slate-800">
+	<header class="bg-white border-b border-slate-200">
+		<div class="max-w-7xl mx-auto px-5 py-4 flex items-center justify-between gap-4">
+			<div>
+				<a href="{{ url_for('admin.dashboard') if role == 'ADMIN' else url_for('librarian.workspace') }}"
+					class="text-sm text-blue-600 hover:underline">← Quay lại trang chính</a>
+				<h1 class="text-2xl font-bold mt-1">Báo cáo và thống kê</h1>
+				<p class="text-sm text-slate-500 mt-1">Tổng hợp dữ liệu mượn, trả và cơ cấu đầu sách trong thư viện.</p>
+			</div>
+			<div class="text-sm text-slate-500">{{ username }}</div>
+		</div>
+	</header>
+
+	<main class="max-w-7xl mx-auto p-5 md:p-8 space-y-6">
+		<section class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4" aria-label="Chỉ số thư viện">
+			<article class="bg-white rounded-xl border p-5">
+				<p class="text-xs text-slate-500">Tổng đầu sách</p>
+				<p id="totalTitles" class="text-3xl font-bold mt-2">—</p>
+			</article>
+			<article class="bg-white rounded-xl border p-5">
+				<p class="text-xs text-slate-500">Tổng bản sao</p>
+				<p id="totalCopies" class="text-3xl font-bold mt-2">—</p>
+			</article>
+			<article class="bg-white rounded-xl border p-5">
+				<p class="text-xs text-slate-500">Độc giả đang hoạt động</p>
+				<p id="activeReaders" class="text-3xl font-bold mt-2">—</p>
+			</article>
+			<article class="bg-white rounded-xl border p-5">
+				<p class="text-xs text-slate-500">Độc giả mới (30 ngày)</p>
+				<p id="newReaders" class="text-3xl font-bold mt-2">—</p>
+			</article>
+			<article class="bg-white rounded-xl border p-5">
+				<p class="text-xs text-slate-500">Bản sao đang được mượn</p>
+				<p id="borrowedCopies" class="text-3xl font-bold mt-2">—</p>
+			</article>
+			<article class="bg-white rounded-xl border p-5">
+				<p class="text-xs text-slate-500">Bản sao quá hạn</p>
+				<p id="overdueCopies" class="text-3xl font-bold mt-2 text-rose-600">—</p>
+			</article>
+		</section>
+
+		<section class="bg-white rounded-xl border p-5">
+			<div class="flex flex-wrap items-center justify-between gap-3 mb-5">
+				<div>
+					<h2 class="font-semibold text-lg">Hoạt động mượn / trả</h2>
+					<p class="text-xs text-slate-500 mt-1">Số bản sao được mượn và trả theo ngày</p>
+				</div>
+				<label class="text-sm flex items-center gap-2">Khoảng thời gian
+					<select id="period" class="border rounded-lg px-3 py-2 bg-white">
+						<option value="7">7 ngày</option>
+						<option value="30" selected>30 ngày</option>
+						<option value="90">90 ngày</option>
+					</select>
+				</label>
+			</div>
+			<div class="h-80"><canvas id="activityChart" aria-label="Biểu đồ hoạt động mượn trả"></canvas></div>
+			<p id="activityError" class="text-sm text-rose-600 mt-2" role="status"></p>
+		</section>
+
+		<section class="bg-white rounded-xl border p-5">
+			<div class="mb-5">
+				<h2 class="font-semibold text-lg">Phân bố sách theo thể loại</h2>
+				<p class="text-xs text-slate-500 mt-1">Số lượng bản sao đang thuộc danh mục kinh doanh</p>
+			</div>
+			<div class="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_320px] gap-6 items-center">
+				<div class="h-80"><canvas id="categoryChart" aria-label="Biểu đồ phân bố thể loại sách"></canvas></div>
+				<div id="categoryLegend" class="space-y-2 text-sm"></div>
+			</div>
+			<p id="categoryError" class="text-sm text-rose-600 mt-2" role="status"></p>
+		</section>
+	</main>
+
+	<script>
+		const numberFormat = new Intl.NumberFormat('vi-VN');
+		const setText = (id, value) => { document.getElementById(id).textContent = numberFormat.format(Number(value || 0)); };
+		let activityChart;
+		let categoryChart;
+
+		async function loadSummary() {
+			const response = await fetch('/admin/reports/dashboard', { headers: { 'Accept': 'application/json' } });
+			const result = await response.json();
+			if (!response.ok || !result.success) throw new Error(result.message || 'Không tải được thống kê.');
+			const data = result.data;
+			setText('totalTitles', data.total_titles);
+			setText('totalCopies', data.total_copies);
+			setText('activeReaders', data.active_readers);
+			setText('newReaders', data.new_readers_30_days);
+			setText('borrowedCopies', data.currently_borrowed);
+			setText('overdueCopies', data.overdue_loans);
+		}
+
+		async function loadActivity() {
+			const error = document.getElementById('activityError'); error.textContent = '';
+			const days = document.getElementById('period').value;
+			try {
+				const response = await fetch(`/admin/reports/activity?days=${encodeURIComponent(days)}`);
+				const result = await response.json();
+				if (!response.ok || !result.success) throw new Error(result.message || 'Không tải được hoạt động mượn/trả.');
+				const rows = result.data;
+				if (activityChart) activityChart.destroy();
+				activityChart = new Chart(document.getElementById('activityChart'), {
+					type: 'line',
+					data: {
+						labels: rows.map(row => new Date(`${row.date}T00:00:00`).toLocaleDateString('vi-VN')),
+						datasets: [
+							{ label: 'Mượn', data: rows.map(row => row.borrowed), tension: 0.25 },
+							{ label: 'Trả', data: rows.map(row => row.returned), tension: 0.25 }
+						]
+					},
+					options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } }
+				});
+			} catch (failure) { error.textContent = failure.message; }
+		}
+
+		async function loadCategories() {
+			const error = document.getElementById('categoryError'); error.textContent = '';
+			try {
+				const response = await fetch('/admin/reports/categories');
+				const result = await response.json();
+				if (!response.ok || !result.success) throw new Error(result.message || 'Không tải được phân bố thể loại.');
+				const rows = result.data;
+				if (categoryChart) categoryChart.destroy();
+				categoryChart = new Chart(document.getElementById('categoryChart'), {
+					type: 'doughnut',
+					data: { labels: rows.map(row => row.category), datasets: [{ data: rows.map(row => row.copies) }] },
+					options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+				});
+				const legend = document.getElementById('categoryLegend'); legend.replaceChildren();
+				for (const row of rows) {
+					const item = document.createElement('div'); item.className = 'flex justify-between gap-3 border-b last:border-0 pb-2';
+					const name = document.createElement('span'); name.textContent = row.category;
+					const count = document.createElement('strong'); count.textContent = numberFormat.format(row.copies);
+					item.append(name, count); legend.append(item);
+				}
+				if (!rows.length) legend.textContent = 'Chưa có dữ liệu thể loại.';
+			} catch (failure) { error.textContent = failure.message; }
+		}
+
+		document.getElementById('period').addEventListener('change', loadActivity);
+		Promise.all([loadSummary(), loadActivity(), loadCategories()]).catch(error => {
+			document.getElementById('activityError').textContent = error.message;
+		});
+	</script>
+</body>
+
+</html>

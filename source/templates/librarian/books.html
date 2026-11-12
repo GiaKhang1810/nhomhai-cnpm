@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="vi">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Quản lý sách | Libra</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="min-h-screen bg-slate-50 text-slate-800">
+    <header class="bg-white border-b">
+        <div class="max-w-7xl mx-auto px-5 py-4 flex items-center justify-between">
+            <div><a href="{{ (url_for('admin.dashboard') if role == 'ADMIN' else url_for('librarian.workspace')) }}"
+                    class="text-sm text-blue-600">← Bàn làm việc</a>
+                <h1 class="text-2xl font-bold mt-1">Quản lý đầu sách</h1>
+            </div><span class="text-sm text-slate-500">{{ username }}</span>
+        </div>
+    </header>
+    <main class="max-w-7xl mx-auto p-5 grid lg:grid-cols-[360px_1fr] gap-5">
+        <section class="bg-white rounded-2xl border p-5 h-fit">
+            <h2 class="font-semibold text-lg mb-4">Thêm đầu sách</h2>
+            <form id="bookForm" class="space-y-3">
+                <label class="block text-sm">Mã sách<input name="book_code" required maxlength="20"
+                        class="mt-1 w-full border rounded-lg p-2"></label>
+                <label class="block text-sm">Tên sách<input name="title" required
+                        class="mt-1 w-full border rounded-lg p-2"></label>
+                <label class="block text-sm">Tác giả<input name="author" required
+                        class="mt-1 w-full border rounded-lg p-2"></label>
+                <label class="block text-sm">Nhà xuất bản<input name="publisher"
+                        class="mt-1 w-full border rounded-lg p-2"></label>
+                <div class="grid grid-cols-2 gap-3"><label class="block text-sm">Năm xuất bản<input
+                            name="publication_year" type="number" min="1000" max="9999"
+                            class="mt-1 w-full border rounded-lg p-2"></label><label class="block text-sm">Số
+                        lượng<input name="total_quantity" type="number" min="0" value="1" required
+                            class="mt-1 w-full border rounded-lg p-2"></label></div>
+                <label class="block text-sm">Thể loại<input name="category"
+                        class="mt-1 w-full border rounded-lg p-2"></label>
+                <label class="block text-sm">Giá trị bồi thường (VND)<input name="listed_value" type="number" min="0"
+                        step="1000" value="0" required class="mt-1 w-full border rounded-lg p-2"></label>
+                <button class="w-full bg-blue-600 hover:bg-blue-700 text-white rounded-lg py-2.5 font-semibold">Thêm
+                    sách</button>
+                <p id="bookMessage" class="text-sm" aria-live="polite"></p>
+            </form>
+        </section>
+        <section class="bg-white rounded-2xl border p-5">
+            <div class="flex flex-col sm:flex-row gap-3 justify-between sm:items-center mb-4">
+                <h2 class="font-semibold text-lg">Danh mục sách</h2>
+                <div class="flex gap-2"><input id="bookSearch" placeholder="Tên sách, tác giả, mã sách..."
+                        class="border rounded-lg px-3 py-2 text-sm"><button id="searchBooks"
+                        class="bg-slate-800 text-white rounded-lg px-4 text-sm">Tìm</button></div>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="text-left text-slate-500 border-b">
+                            <th class="py-3">Mã</th>
+                            <th>Tên sách</th>
+                            <th>Tác giả</th>
+                            <th>Khả dụng</th>
+                            <th>Giá trị</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody id="bookRows">
+                        <tr>
+                            <td colspan="6" class="py-6 text-center text-slate-400">Đang tải...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <p id="bookListMessage" class="text-sm text-slate-500 mt-3"></p>
+        </section>
+    </main>
+    <script src="{{ url_for('static', filename='js/books.js') }}"></script>
+</body>
+
+</html>

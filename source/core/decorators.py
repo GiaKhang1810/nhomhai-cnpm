@@ -1,23 +1,33 @@
 from functools import wraps
-from flask import session, redirect, url_for, flash, abort
+from typing import Callable, TypeVar, Any
 
-def login_required(f):
-    @wraps(f)
-    def decorated_function(*args, **kwargs):
-        if 'user_id' not in session:
+from flask import abort, flash, redirect, request, session, url_for
+
+F = TypeVar("F", bound=Callable[..., Any])
+
+
+def login_required(function: F) -> F:
+    @wraps(function)
+    def decorated_function(*args: Any, **kwargs: Any):
+        if "user_id" not in session:
+            if request.path.startswith("/api/") or request.is_json:
+                abort(401)
             flash("Vui lòng đăng nhập để tiếp tục.", "warning")
-            return redirect(url_for('auth.login'))
-        return f(*args, **kwargs)
-    return decorated_function
+            return redirect(url_for("auth.login"))
+        return function(*args, **kwargs)
+    return decorated_function  # type: ignore[return-value]
 
-def role_required(*roles):
-    def decorator(f):
-        @wraps(f)
-        def decorated_function(*args, **kwargs):
-            if 'user_id' not in session:
-                return redirect(url_for('auth.login'))
-            if session.get('role') not in roles:
+
+def role_required(*roles: str):
+    def decorator(function: F) -> F:
+        @wraps(function)
+        def decorated_function(*args: Any, **kwargs: Any):
+            if "user_id" not in session:
+                if request.path.startswith("/api/") or request.is_json:
+                    abort(401)
+                return redirect(url_for("auth.login"))
+            if session.get("role") not in roles:
                 abort(403)
-            return f(*args, **kwargs)
-        return decorated_function
+            return function(*args, **kwargs)
+        return decorated_function  # type: ignore[return-value]
     return decorator

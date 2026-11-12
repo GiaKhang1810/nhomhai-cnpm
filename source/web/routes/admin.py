@@ -1,102 +1,50 @@
-from flask import Blueprint, render_template, session, jsonify
+from flask import Blueprint, render_template, session
+
 from source.core.decorators import login_required, role_required
-from source.database.connection import get_db_connection
+from source.repositories.report_repository import ReportRepository
 
-admin_bp = Blueprint('admin', __name__, url_prefix='/admin')
+admin_bp = Blueprint("admin", __name__, url_prefix="/admin")
+report_repo = ReportRepository()
 
-@admin_bp.route('/dashboard', methods=['GET'])
+
+@admin_bp.get("/dashboard")
 @login_required
-@role_required('ADMIN')
+@role_required("ADMIN")
 def dashboard():
-    username = session.get('username', 'Quản trị viên')
-    
-    db = get_db_connection()
-    cursor = db.cursor(dictionary=True)
-    
-    total_titles = 0
-    active_readers = 0
-    active_loans = 0
-    overdue_books = 0
-    recent_transactions = []
-    
-    try:
-        cursor.execute("SELECT COUNT(*) as cnt FROM books")
-        res = cursor.fetchone()
-        if res: total_titles = res['cnt']
-        
-        cursor.execute("SELECT COUNT(*) as cnt FROM readers")
-        res = cursor.fetchone()
-        if res: active_readers = res['cnt']
-        
-        cursor.execute("SELECT COUNT(*) as cnt FROM borrowing_details WHERE return_date IS NULL")
-        res = cursor.fetchone()
-        if res: active_loans = res['cnt']
-        
-        cursor.execute("""
-            SELECT COUNT(*) as cnt FROM borrowing_records br
-            JOIN borrowing_details bd ON br.loan_id = bd.loan_id
-            WHERE bd.return_date IS NULL AND br.due_date < CURDATE()
-        """)
-        res = cursor.fetchone()
-        if res: overdue_books = res['cnt']
-        
-        cursor.execute("""
-            SELECT br.loan_id, r.full_name as reader, b.title as book, 
-                   br.borrow_date, br.due_date, br.status
-            FROM borrowing_records br
-            JOIN readers r ON br.reader_id = r.reader_id
-            JOIN borrowing_details bd ON br.loan_id = bd.loan_id
-            JOIN book_copies bc ON bd.copy_id = bc.copy_id
-            JOIN books b ON bc.book_code = b.book_code
-            ORDER BY br.borrow_date DESC
-            LIMIT 5
-        """)
-        rows = cursor.fetchall()
-        for row in rows:
-            status_color = "bg-emerald-50 text-emerald-600"
-            status_text = row['status']
-            if status_text == 'OVERDUE':
-                status_color = "bg-red-50 text-red-600"
-                status_text = "Quá hạn"
-            elif status_text == 'RETURNED':
-                status_color = "bg-slate-100 text-slate-600"
-                status_text = "Đã trả"
-            else:
-                status_text = "Đang mượn"
-                
-            recent_transactions.append({
-                "loan_id": f"#BR-{row['loan_id']}",
-                "reader": row['reader'],
-                "book": row['book'],
-                "date": row['borrow_date'].strftime('%d/%m/%Y') if row['borrow_date'] else '',
-                "due_date": row['due_date'].strftime('%d/%m/%Y') if row['due_date'] else '',
-                "status": status_text,
-                "status_color": status_color
-            })
-    except Exception as e:
-        print(f"Lỗi truy vấn Admin Dashboard: {e}")
-    finally:
-        cursor.close()
-
+    metrics_data = report_repo.get_dashboard_metrics()
     metrics = {
-        'total_titles': f"{total_titles:,}",
-        'title_trend': "Hệ thống kho",
-        'active_readers': f"{active_readers:,}",
-        'reader_trend': "Thành viên",
-        'active_loans': f"{active_loans}",
-        'loan_note': "Bản đang cho mượn",
-        'overdue_books': f"{overdue_books}",
-        'overdue_note': "Cần xử lý ngay"
+        "total_titles": f"{metrics_data['total_titles']:,}",
+        "title_trend": f"{metrics_data['total_copies']:,} bản sao trong kho",
+        "active_readers": f"{metrics_data['active_readers']:,}",
+        "reader_trend": f"{metrics_data['new_readers_30_days']:,} độc giả mới trong 30 ngày",
+        "active_loans": f"{metrics_data['currently_borrowed']:,}",
+        "loan_note": "Bản sao đang được mượn",
+        "overdue_books": f"{metrics_data['overdue_loans']:,}",
+        "overdue_note": "Bản sao cần xử lý",
     }
-    
-    return render_template('admin/dashboard.html', 
-                           username=username, 
-                           metrics=metrics, 
-                           recent_transactions=recent_transactions)
+    transactions = report_repo.get_recent_transactions(8)
+    formatted = []
+    for row in transactions:
+        status = row["status"]
+        formatted.append({
+            "loan_id": row["loan_id"],
+            "reader": row["reader"],
+            "book": row["book"],
+            "date": row["borrow_date"].strftime("%d/%m/%Y") if row["borrow_date"] else "",
+            "due_date": row["due_date"].strftime("%d/%m/%Y") if row["due_date"] else "",
+            "status": {"BORROWED": "Đang mượn", "RETURNED": "Đã trả", "OVERDUE": "Quá hạn"}.get(status, status),
+            "status_color": {"BORROWED": "bg-amber-50 text-amber-600", "RETURNED": "bg-slate-100 text-slate-600", "OVERDUE": "bg-red-50 text-red-600"}.get(status, "bg-slate-100 text-slate-600"),
+        })
+    return render_template(
+        "admin/dashboard.html",
+        username=session.get("username", "Quản trị viên"),
+        metrics=metrics,
+        recent_transactions=formatted,
+    )
 
-@admin_bp.route('/api/reports/dashboard', methods=['GET'])
+
+@admin_bp.get("/accounts")
 @login_required
-@role_required('ADMIN')
-def api_dashboard_data():
-    """API trả về JSON thống kê."""
-    return jsonify({"success": True, "data": {}})
+@role_required("ADMIN")
+def accounts_page():
+    return render_template("admin/accounts.html", username=session.get("username", "Quản trị viên"))

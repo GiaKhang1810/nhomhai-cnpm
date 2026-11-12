@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="vi">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Quản lý nhân viên | Libra</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="min-h-screen bg-slate-50">
+    <header class="bg-white border-b p-5">
+        <div class="max-w-6xl mx-auto"><a href="{{ url_for('admin.dashboard') }}" class="text-sm text-blue-600">← Tổng
+                quan</a>
+            <h1 class="text-2xl font-bold mt-1">Quản lý tài khoản nhân viên</h1>
+        </div>
+    </header>
+    <main class="max-w-6xl mx-auto p-5 grid lg:grid-cols-[350px_1fr] gap-5">
+        <section class="bg-white border rounded-2xl p-5 h-fit">
+            <h2 class="font-semibold text-lg mb-4">Tạo tài khoản nhân viên</h2>
+            <form id="staffForm" class="space-y-3">{% for name,label,typ in [('full_name','Họ
+                tên','text'),('username','Tên đăng nhập','text'),('email','Email','email'),('password','Mật khẩu (tối
+                thiểu 8 ký tự)','password'),('phone','Số điện thoại','tel')] %}<label class="block text-sm">{{ label
+                    }}<input name="{{ name }}" type="{{ typ }}" {% if name not in ['phone', 'full_name' ] %}required{%
+                        endif %} class="mt-1 w-full border rounded-lg p-2"></label>{% endfor %}<label
+                    class="block text-sm">Vai trò<select name="role" class="mt-1 w-full border rounded-lg p-2">
+                        <option value="LIBRARIAN">Thủ thư</option>
+                        <option value="ADMIN">Quản trị viên</option>
+                    </select><span class="text-xs text-slate-500">Họ tên chỉ bắt buộc đối với Thủ
+                        thư.</span></label><button
+                    class="w-full bg-blue-600 text-white rounded-lg py-2.5 font-semibold">Tạo tài khoản</button>
+                <p id="staffMessage" class="text-sm" aria-live="polite"></p>
+            </form>
+        </section>
+        <section class="bg-white border rounded-2xl p-5">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-lg font-semibold">Danh sách nhân viên</h2><button id="reloadStaff"
+                    class="border rounded-lg px-3 py-2 text-sm">Tải lại</button>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr class="text-left text-slate-500 border-b">
+                            <th class="py-3">Nhân viên</th>
+                            <th>Tên đăng nhập</th>
+                            <th>Email</th>
+                            <th>Vai trò</th>
+                            <th>Trạng thái</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody id="staffRows"></tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+    <script src="{{ url_for('static', filename='js/accounts.js') }}"></script>
+</body>
+
+</html>

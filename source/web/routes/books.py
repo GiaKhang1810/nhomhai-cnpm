@@ -1,75 +1,86 @@
-from flask import Blueprint, request, jsonify
-from source.services.book_service import BookService
-from source.core.decorators import login_required, role_required
-from time import time
+from flask import Blueprint, jsonify, request
 
-books_bp = Blueprint('books', __name__, url_prefix='/api/books')
+from source.core.decorators import login_required, role_required
+from source.services.book_service import BookService
+
+books_bp = Blueprint("books", __name__, url_prefix="/api/books")
 book_service = BookService()
 
-@books_bp.route('/search', methods=['GET'])
+
+def _serialize_book(book):
+    return {
+        "book_code": book.book_code,
+        "title": book.title,
+        "author": book.author,
+        "publisher": book.publisher,
+        "publication_year": book.publication_year,
+        "category": book.category,
+        "listed_value": str(book.listed_value),
+        "total_quantity": book.total_quantity,
+        "available_quantity": book.available_quantity,
+        "is_active": book.is_active,
+    }
+
+
+@books_bp.get("/search")
 @login_required
 def search():
-    start_time = time()
-    keyword = request.args.get('q', '').strip()
-    
+    keyword = request.args.get("q", "").strip()
     if not keyword:
         return jsonify({"success": False, "message": "Vui lòng nhập từ khóa tìm kiếm."}), 400
-        
     books = book_service.search_books(keyword)
-    
-    books_data = [
-        {
-            "book_code": b.book_code,
-            "title": b.title,
-            "author": b.author,
-            "category": b.category,
-            "available_quantity": b.available_quantity
-        } for b in books
-    ]
-    
-    process_time = time() - start_time
-    if process_time > 2.0:
-        print(f"Warning: Search took {process_time} seconds (limit is 2s).")
+    return jsonify({"success": True, "data": [_serialize_book(book) for book in books], "count": len(books)})
 
-    return jsonify({
-        "success": True,
-        "data": books_data,
-        "count": len(books_data),
-        "process_time_seconds": round(process_time, 4)
-    })
 
-@books_bp.route('/', methods=['POST'])
+@books_bp.get("/")
 @login_required
-@role_required('LIBRARIAN', 'ADMIN') 
-def add_book():
-    """API thêm sách mới."""
-    data = request.json
-    if not data:
-        return jsonify({"success": False, "message": "Dữ liệu không hợp lệ."}), 400
+def collection():
+    keyword = request.args.get("q", "").strip()
+    books = book_service.search_books(keyword)
+    return jsonify({"success": True, "data": [_serialize_book(book) for book in books], "count": len(books)})
 
+
+@books_bp.post("/")
+@login_required
+@role_required("LIBRARIAN", "ADMIN")
+def create_book():
+    data = request.get_json(silent=True) or {}
     success, message = book_service.add_new_book(data)
-    
-    status_code = 201 if success else 400
-    return jsonify({"success": success, "message": message}), status_code
+    return jsonify({"success": success, "message": message}), 201 if success else 400
 
-@books_bp.route('/<book_code>', methods=['GET'])
+
+@books_bp.get("/<string:book_code>")
 @login_required
-def get_book(book_code):
+def get_book(book_code: str):
     book = book_service.get_book_details(book_code)
-    if not book:
+    if not book or not book.is_active:
         return jsonify({"success": False, "message": "Không tìm thấy sách."}), 404
-        
-    return jsonify({
-        "success": True,
-        "data": {
-            "book_code": book.book_code,
-            "title": book.title,
-            "author": book.author,
-            "publisher": book.publisher,
-            "publication_year": book.publication_year,
-            "category": book.category,
-            "listed_value": book.listed_value,
-            "total_quantity": book.total_quantity,
-            "available_quantity": book.available_quantity
-        }
-    })
+    return jsonify({"success": True, "data": _serialize_book(book)})
+
+
+@books_bp.put("/<string:book_code>")
+@login_required
+@role_required("LIBRARIAN", "ADMIN")
+def update_book(book_code: str):
+    data = request.get_json(silent=True) or {}
+    success, message = book_service.update_book(book_code, data)
+    return jsonify({"success": success, "message": message}), 200 if success else 400
+
+
+@books_bp.delete("/<string:book_code>")
+@login_required
+@role_required("LIBRARIAN", "ADMIN")
+def deactivate_book(book_code: str):
+    success, message = book_service.deactivate_book(book_code)
+    return jsonify({"success": success, "message": message}), 200 if success else 400
+
+
+
+@books_bp.get("/<string:book_code>/copies")
+@login_required
+@role_required("LIBRARIAN", "ADMIN")
+def list_available_copies(book_code: str):
+    book = book_service.get_book_details(book_code)
+    if not book or not book.is_active:
+        return jsonify({"success": False, "message": "Không tìm thấy sách."}), 404
+    return jsonify({"success": True, "data": book_service.list_available_copies(book_code)})

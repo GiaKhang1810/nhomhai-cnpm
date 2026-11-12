@@ -1,28 +1,42 @@
-from mysql.connector import connect
-from mysql.connector import Error
-from mysql.connector.connection import MySQLConnection
-from flask import g
+from __future__ import annotations
+
 from typing import Optional
-from source.configs.settings import Config
+
+from flask import current_app, g
+from mysql.connector import Error, connect
+from mysql.connector.connection import MySQLConnection
+
 
 def get_db_connection() -> MySQLConnection:
-    if 'db' not in g:
+    """Return one MySQL connection for the current Flask application context."""
+    connection = g.get("db")
+    if connection is None or not connection.is_connected():
         try:
-            connection: MySQLConnection = connect(
-                host=Config.DB_HOST,
-                user=Config.DB_USER,
-                password=Config.DB_PASSWORD,
-                database=Config.DB_NAME,
-                port=Config.DB_PORT
+            connection = connect(
+                host=current_app.config["DB_HOST"],
+                user=current_app.config["DB_USER"],
+                password=current_app.config["DB_PASSWORD"],
+                database=current_app.config["DB_NAME"],
+                port=current_app.config["DB_PORT"],
+                connection_timeout=current_app.config.get("DB_CONNECT_TIMEOUT", 10),
+                charset="utf8mb4",
+                collation="utf8mb4_unicode_ci",
+                autocommit=True,
             )
-            connection.autocommit = False 
             g.db = connection
-        except Error as e:
-            print(f"Error connecting to MySQL: {e}")
-            raise e
-    return g.db
+        except Error:
+            current_app.logger.exception("Unable to connect to MySQL")
+            raise
+    return connection
 
-def close_db_connection(e: Optional[Exception] = None) -> None:
-    db: Optional[MySQLConnection] = g.pop('db', None)
-    if db is not None:
-        db.close()
+
+def close_db_connection(error: Optional[BaseException] = None) -> None:
+    connection = g.pop("db", None)
+    if connection is not None:
+        try:
+            if connection.is_connected():
+                if error is not None:
+                    connection.rollback()
+                connection.close()
+        except Error:
+            current_app.logger.exception("Error while closing MySQL connection")

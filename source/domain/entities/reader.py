@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from datetime import date
+from datetime import date, datetime
 from typing import Optional
 
 @dataclass
@@ -14,3 +14,4 @@ class Reader:
     gender: Optional[str] = None
     phone: Optional[str] = None
     account_status: str = 'ACTIVE'
+    created_at: Optional[datetime] = None
