@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="vi">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Quản lý phiếu mượn | Libra</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="min-h-screen bg-slate-50 text-slate-800">
+    <header class="bg-white border-b">
+        <div class="max-w-7xl mx-auto p-5 flex flex-wrap items-center justify-between gap-3">
+            <div><a href="{{ url_for('librarian.workspace') }}" class="text-sm text-blue-600">← Bàn làm việc</a>
+                <h1 class="text-2xl font-bold mt-1">Quản lý phiếu mượn</h1>
+                <p class="text-sm text-slate-500">Duyệt yêu cầu mượn, xử lý yêu cầu trả và theo dõi phiếu mượn.</p>
+            </div><a href="{{ url_for('librarian.borrow_page') }}"
+                class="rounded-lg bg-blue-600 text-white px-4 py-2 text-sm">+ Tạo phiếu mượn trực tiếp</a>
+        </div>
+    </header>
+    <main class="max-w-7xl mx-auto p-5 space-y-6">
+        <section class="bg-white border rounded-2xl p-5">
+            <div class="flex justify-between items-center gap-3 mb-4">
+                <div>
+                    <h2 class="font-semibold text-lg">Yêu cầu mượn đang chờ</h2>
+                    <p class="text-sm text-slate-500">Khi duyệt, hệ thống tự chọn bản sao còn khả dụng và tạo phiếu mượn
+                        14 ngày.</p>
+                </div><span class="rounded-full bg-amber-50 text-amber-700 px-3 py-1 text-xs">{{
+                    pending_borrow_requests|length }} yêu cầu</span>
+            </div>
+            <div class="space-y-3">{% for row in pending_borrow_requests %}<article
+                    class="border rounded-xl p-4 flex flex-wrap items-center justify-between gap-4">
+                    <div class="min-w-[240px] flex-1">
+                        <p class="font-semibold">{{ row.full_name }} <span
+                                class="text-xs text-slate-400 font-normal">({{ row.reader_id }})</span></p>
+                        <p class="text-sm text-slate-700 mt-1">{{ row.requested_books }}</p>
+                        <p class="text-xs text-slate-400 mt-1">{{ row.request_id }} · {{
+                            row.requested_at.strftime('%d/%m/%Y %H:%M') }}</p>
+                    </div>
+                    <div class="flex gap-2"><button
+                            class="approveBorrow rounded-lg bg-emerald-600 text-white px-3 py-2 text-sm"
+                            data-id="{{ row.request_id }}">Duyệt và lập phiếu</button><button
+                            class="rejectBorrow rounded-lg border border-red-200 text-red-600 px-3 py-2 text-sm"
+                            data-id="{{ row.request_id }}">Từ chối</button></div>
+                </article>{% else %}<p class="py-6 text-center text-sm text-slate-400">Không có yêu cầu mượn đang chờ.
+                </p>{% endfor %}</div>
+        </section>
+        <section class="bg-white border rounded-2xl p-5">
+            <div class="flex justify-between items-center gap-3 mb-4">
+                <div>
+                    <h2 class="font-semibold text-lg">Yêu cầu trả đang chờ</h2>
+                    <p class="text-sm text-slate-500">Độc giả cần mang sách đến quầy. Chọn ghi nhận trả sau khi đã nhận
+                        và kiểm tra sách.</p>
+                </div><span class="rounded-full bg-amber-50 text-amber-700 px-3 py-1 text-xs">{{
+                    pending_return_requests|length }} yêu cầu</span>
+            </div>
+            <div class="space-y-3">{% for row in pending_return_requests %}<article
+                    class="border rounded-xl p-4 flex flex-wrap items-center justify-between gap-4">
+                    <div class="min-w-[240px] flex-1">
+                        <p class="font-semibold">{{ row.full_name }} <span
+                                class="text-xs text-slate-400 font-normal">({{ row.reader_id }})</span></p>
+                        <p class="text-sm mt-1">{{ row.title }} · Bản sao {{ row.copy_id }}</p>
+                        <p class="text-xs text-slate-400 mt-1">Phiếu {{ row.loan_id }} · Gửi {{
+                            row.requested_at.strftime('%d/%m/%Y %H:%M') }} · {{ row.return_request_id }}</p>
+                    </div>
+                    <div class="flex gap-2"><a href="{{ url_for('librarian.returns_page') }}?loan_id={{ row.loan_id }}"
+                            class="rounded-lg bg-blue-600 text-white px-3 py-2 text-sm">Ghi nhận trả</a><button
+                            class="rejectReturn rounded-lg border border-red-200 text-red-600 px-3 py-2 text-sm"
+                            data-id="{{ row.return_request_id }}">Từ chối</button></div>
+                </article>{% else %}<p class="py-6 text-center text-sm text-slate-400">Không có yêu cầu trả đang chờ.
+                </p>{% endfor %}</div>
+        </section>
+        <section class="bg-white border rounded-2xl p-5">
+            <div class="flex flex-wrap justify-between items-center gap-3 mb-4">
+                <div>
+                    <h2 class="font-semibold text-lg">Danh sách phiếu mượn</h2>
+                    <p class="text-sm text-slate-500">Tối đa 200 phiếu mới nhất.</p>
+                </div><input id="loanFilter" class="border rounded-lg px-3 py-2 text-sm"
+                    placeholder="Tìm mã phiếu / độc giả / sách">
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm min-w-[850px]">
+                    <thead>
+                        <tr class="text-left text-slate-500 border-b">
+                            <th class="py-3">Mã phiếu</th>
+                            <th>Độc giả</th>
+                            <th>Sách</th>
+                            <th>Ngày mượn</th>
+                            <th>Hạn trả</th>
+                            <th>Còn phải trả</th>
+                            <th>Trạng thái</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody id="loanRows">{% for row in loan_records %}<tr class="border-b loanRow">
+                            <td class="py-3 font-medium">{{ row.loan_id }}</td>
+                            <td>{{ row.full_name }}<div class="text-xs text-slate-400">{{ row.reader_id }}</div>
+                            </td>
+                            <td>{{ row.books }}</td>
+                            <td>{{ row.borrow_date.strftime('%d/%m/%Y') }}</td>
+                            <td>{{ row.due_date.strftime('%d/%m/%Y') }}</td>
+                            <td>{{ row.unreturned_copies }}/{{ row.total_copies }}</td>
+                            <td>{% if row.status == 'RETURNED' %}<span class="text-emerald-600">Đã trả</span>{% elif
+                                row.due_date < today %}<span class="text-red-600">Quá hạn</span>{% else %}<span
+                                        class="text-amber-600">Đang mượn</span>{% endif %}</td>
+                            <td><a class="text-blue-600 hover:underline"
+                                    href="{{ url_for('librarian.returns_page') }}?loan_id={{ row.loan_id }}">Chi tiết /
+                                    Trả</a></td>
+                        </tr>{% else %}<tr>
+                            <td colspan="8" class="py-8 text-center text-slate-400">Chưa có phiếu mượn.</td>
+                        </tr>{% endfor %}</tbody>
+                </table>
+            </div>
+            <p id="loanManagementMessage" class="text-sm mt-3" aria-live="polite"></p>
+        </section>
+    </main>
+    <script src="{{ url_for('static', filename='js/loan-management.js') }}"></script>
+</body>
+
+</html>

@@ -34,7 +34,7 @@ class BorrowingRepository:
         finally:
             cursor.close()
 
-    def create_loan_transaction(self, record: BorrowingRecord) -> tuple[bool, str]:
+    def create_loan_transaction(self, record: BorrowingRecord, request_id: str | None = None, processed_by: int | None = None) -> tuple[bool, str]:
         db = get_db_connection()
         cursor = db.cursor(dictionary=True)
         try:
@@ -43,6 +43,16 @@ class BorrowingRepository:
             reader = cursor.fetchone()
             if not reader:
                 raise ValueError("Không tìm thấy thông tin độc giả.")
+            if request_id:
+                cursor.execute(
+                    "SELECT reader_id, status FROM borrow_requests WHERE request_id=%s FOR UPDATE",
+                    (request_id,),
+                )
+                borrow_request = cursor.fetchone()
+                if not borrow_request or borrow_request["reader_id"] != record.reader_id:
+                    raise ValueError("Không tìm thấy yêu cầu mượn hợp lệ cho độc giả này.")
+                if borrow_request["status"] != "PENDING":
+                    raise ValueError("Yêu cầu mượn này đã được xử lý trước đó.")
             from datetime import date
             today = date.today()
             if reader["account_status"] != "ACTIVE" or reader["card_expiry_date"] < today:
@@ -122,6 +132,13 @@ class BorrowingRepository:
                 )
                 if cursor.rowcount != 1:
                     raise ValueError("Số lượng tồn kho không nhất quán. Giao dịch đã được hủy.")
+            if request_id:
+                cursor.execute(
+                    "UPDATE borrow_requests SET status='APPROVED', processed_by=%s, processed_at=NOW() WHERE request_id=%s AND status='PENDING'",
+                    (processed_by, request_id),
+                )
+                if cursor.rowcount != 1:
+                    raise ValueError("Yêu cầu mượn vừa được xử lý bởi giao dịch khác.")
             db.commit()
             return True, f"Tạo phiếu mượn thành công. Mã phiếu: {record.loan_id}"
         except ValueError as error:

@@ -192,3 +192,22 @@ Các luồng cần kiểm thử tích hợp với MySQL gồm đăng nhập, t�
 - Khi danh sách chưa đồng bộ sau khi API xác nhận lưu, giao diện giữ dữ liệu trong form và hướng dẫn tải lại; tránh người dùng gửi trùng bản ghi.
 - Bổ sung nút Tải lại cho danh sách sách và độc giả; đổi phiên bản URL JavaScript để trình duyệt không tiếp tục dùng file script cũ trong cache.
 - Lỗi SQL khi tạo/cập nhật nhân viên, độc giả hoặc sách được ghi vào Flask log để thuận tiện chẩn đoán.
+
+## Reader borrowing and return requests
+
+Readers do not directly mark physical copies as borrowed or returned. They can:
+
+- Browse the catalogue and submit a borrowing request for a title and quantity.
+- View current loans and cancel a pending borrowing request.
+- Submit a return request for a copy they currently have on loan; they must bring the copy to the library desk.
+
+Librarians manage these requests at `/librarian/loans`. Approving a borrowing request creates the actual 14-day loan in a single database transaction. Recording a physical return in the librarian return workflow completes any matching pending return request.
+
+For an existing `library_db`, back it up first, then run this migration once after migration 0002 from PowerShell in the project directory:
+
+```powershell
+cmd /c "mysql -u root -p library_db < migrations\versions\0003_reader_borrow_return_requests.sql"
+```
+
+The migration is additive and preserves existing loans/readers/books. For a brand-new database, use the updated `migrations/schema.sql`. `migrations/reset_database.sql` is destructive and should only be used when intentionally deleting all existing library data.
+

@@ -12,7 +12,7 @@ class BorrowingService:
     def __init__(self) -> None:
         self.borrowing_repo = BorrowingRepository()
 
-    def process_borrowing(self, reader_id: str, copy_ids: Sequence[str]) -> tuple[bool, str]:
+    def process_borrowing(self, reader_id: str, copy_ids: Sequence[str], request_id: str | None = None, processed_by: int | None = None) -> tuple[bool, str]:
         if not reader_id.strip():
             return False, "Vui lòng cung cấp mã độc giả."
         if not copy_ids:
@@ -33,6 +33,6 @@ class BorrowingService:
             details=[BorrowingDetail(copy_id=copy_id.strip()) for copy_id in copy_ids],
         )
         try:
-            return self.borrowing_repo.create_loan_transaction(record)
+            return self.borrowing_repo.create_loan_transaction(record, request_id=request_id, processed_by=processed_by)
         except Exception:
             return False, "Lỗi hệ thống khi tạo phiếu mượn. Giao dịch đã được hoàn tác."

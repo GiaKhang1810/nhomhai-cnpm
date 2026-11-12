@@ -1,11 +1,13 @@
-from flask import Blueprint, jsonify, request, render_template
+from flask import Blueprint, jsonify, request, render_template, session
 
 from source.core.decorators import login_required, role_required
 from source.database.connection import get_db_connection
 from source.services.borrowing_service import BorrowingService
+from source.repositories.request_repository import RequestRepository
 
 borrowing_bp = Blueprint("borrowing", __name__, url_prefix="/borrowing")
 borrowing_service = BorrowingService()
+request_repo = RequestRepository()
 
 
 @borrowing_bp.get("/workspace")
@@ -18,7 +20,7 @@ def workspace():
 
 @borrowing_bp.post("/create")
 @login_required
-@role_required("LIBRARIAN")
+@role_required("LIBRARIAN", "ADMIN")
 def create_loan():
     data = request.get_json(silent=True) or {}
     reader_id = str(data.get("reader_id", "")).strip()
@@ -29,9 +31,53 @@ def create_loan():
     return jsonify({"success": success, "message": message}), 201 if success else 400
 
 
+@borrowing_bp.post("/requests/<string:request_id>/approve")
+@login_required
+@role_required("LIBRARIAN", "ADMIN")
+def approve_borrow_request(request_id: str):
+    borrow_request = request_repo.get_pending_borrow_request(request_id)
+    if not borrow_request:
+        return jsonify({"success": False, "message": "Không tìm thấy yêu cầu mượn."}), 404
+    if borrow_request["status"] != "PENDING":
+        return jsonify({"success": False, "message": "Yêu cầu này đã được xử lý."}), 400
+
+    db = get_db_connection()
+    cursor = db.cursor(dictionary=True)
+    copy_ids = []
+    try:
+        for item in borrow_request["items"]:
+            cursor.execute(
+                "SELECT copy_id FROM book_copies WHERE book_code=%s AND status='AVAILABLE' ORDER BY copy_id LIMIT %s",
+                (item["book_code"], item["quantity"]),
+            )
+            copies = cursor.fetchall()
+            if len(copies) != int(item["quantity"]):
+                return jsonify({"success": False, "message": "Không đủ bản sao khả dụng để duyệt yêu cầu. Hãy kiểm tra tồn kho hoặc từ chối yêu cầu."}), 409
+            copy_ids.extend(row["copy_id"] for row in copies)
+    finally:
+        cursor.close()
+
+    success, message = borrowing_service.process_borrowing(
+        borrow_request["reader_id"], copy_ids,
+        request_id=request_id, processed_by=int(session["user_id"]),
+    )
+    return jsonify({"success": success, "message": message}), 201 if success else 400
+
+
+@borrowing_bp.post("/requests/<string:request_id>/reject")
+@login_required
+@role_required("LIBRARIAN", "ADMIN")
+def reject_borrow_request(request_id: str):
+    data = request.get_json(silent=True) or {}
+    success, message = request_repo.reject_borrow_request(
+        request_id, int(session["user_id"]), str(data.get("note", "")),
+    )
+    return jsonify({"success": success, "message": message}), 200 if success else 400
+
+
 @borrowing_bp.get("/lookup/<string:loan_id>")
 @login_required
-@role_required("LIBRARIAN")
+@role_required("LIBRARIAN", "ADMIN")
 def lookup_loan(loan_id: str):
     db = get_db_connection()
     cursor = db.cursor(dictionary=True)
@@ -59,7 +105,7 @@ def lookup_loan(loan_id: str):
 
 @borrowing_bp.get("/lookup")
 @login_required
-@role_required("LIBRARIAN")
+@role_required("LIBRARIAN", "ADMIN")
 def lookup_reader_loans():
     reader_id = request.args.get("reader_id", "").strip()
     if not reader_id:

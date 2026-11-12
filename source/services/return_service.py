@@ -22,6 +22,7 @@ class ReturnService:
         self,
         loan_id: str,
         returned_items: Sequence[ReturnItemRequest],
+        processed_by: int | None = None,
     ) -> tuple[bool, str, Decimal]:
         if not loan_id.strip():
             return False, "Vui lòng nhập mã phiếu mượn.", Decimal("0.00")
@@ -36,6 +37,7 @@ class ReturnService:
             success, total_charge, message = self.return_repo.process_return_transaction(
                 loan_id.strip(), date.today(),
                 [{"copy_id": item.copy_id.strip(), "condition": item.condition} for item in returned_items],
+                processed_by=processed_by,
             )
             if success and total_charge > 0:
                 message += f" Tổng phí phát sinh: {total_charge:,.0f} VND."

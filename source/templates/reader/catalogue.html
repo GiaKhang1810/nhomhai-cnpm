@@ -11,7 +11,8 @@
 <body class="min-h-screen bg-slate-50 text-slate-800">
     <header class="bg-white border-b">
         <div class="max-w-6xl mx-auto p-5"><a href="{{ url_for('profile.dashboard') }}" class="text-sm text-blue-600">←
-                Trang độc giả</a>
+                Trang độc giả</a><a href="{{ url_for('profile.loans') }}" class="ml-4 text-sm text-blue-600">Sách đang
+                mượn / Yêu cầu của tôi</a>
             <h1 class="text-2xl font-bold mt-1">Khám phá sách</h1>
         </div>
     </header>
@@ -25,11 +26,14 @@
                     <p class="text-xs text-blue-600 font-semibold">{{ book.book_code }}</p>
                     <h2 class="font-semibold mt-2">{{ book.title }}</h2>
                     <p class="text-sm text-slate-500">{{ book.author }}</p>
-                    <p class="text-sm mt-3">Còn {{ book.available_quantity }} bản</p><button
-                        data-code="{{ book.book_code }}" class="detailBook mt-3 text-sm text-blue-600">Xem chi
-                        tiết</button>
+                    <p class="text-sm mt-3">Còn {{ book.available_quantity }} bản</p>
+                    <div class="flex flex-wrap items-center gap-3 mt-3"><button data-code="{{ book.book_code }}"
+                            class="detailBook text-sm text-blue-600">Xem chi tiết</button><button
+                            data-code="{{ book.book_code }}" data-title="{{ book.title|e }}"
+                            class="requestBorrow rounded-lg bg-blue-600 text-white px-3 py-2 text-xs disabled:opacity-40"
+                            {% if book.available_quantity <=0 %}disabled{% endif %}>Đăng ký mượn</button></div>
                 </article>{% else %}<p class="text-slate-500">Chưa có sách trong danh mục.</p>{% endfor %}</div>
-            <p id="catalogueMessage" class="text-sm text-slate-500 mt-4"></p>
+            <p id="catalogueMessage" class="text-sm text-slate-500 mt-4" aria-live="polite"></p>
         </div>
     </main>
     <dialog id="bookDialog" class="rounded-2xl p-0 w-[min(92vw,520px)] shadow-2xl">

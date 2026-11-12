@@ -48,7 +48,7 @@
                         class="flex items-center gap-3 px-3 py-2.5 text-slate-500 hover:bg-slate-50 hover:text-slate-700 rounded-lg font-medium text-sm transition-colors">
                         <i class="fa-solid fa-book-arrow-left w-5 text-center"></i> Trả sách
                     </a>
-                    <a href="{{ url_for('librarian.workspace') }}#transactions"
+                    <a href="{{ url_for('librarian.loans_page') }}"
                         class="flex items-center gap-3 px-3 py-2.5 text-slate-500 hover:bg-slate-50 hover:text-slate-700 rounded-lg font-medium text-sm transition-colors">
                         <i class="fa-solid fa-file-invoice w-5 text-center"></i> Quản lý phiếu mượn
                     </a>
@@ -230,7 +230,14 @@
             <div class="h-8"></div>
         </div>
     </main>
-    <script>document.getElementById("transactionSearch")?.addEventListener("input", event => { const value = event.target.value.toLocaleLowerCase(); document.querySelectorAll("#transactionRows tr").forEach(row => { row.hidden = !row.textContent.toLocaleLowerCase().includes(value); }); });</script>
+    <script>
+        document.getElementById("transactionSearch")?.addEventListener("input", event => {
+            const value = event.target.value.toLocaleLowerCase();
+            document.querySelectorAll("#transactionRows tr").forEach(row => {
+                row.hidden = !row.textContent.toLocaleLowerCase().includes(value);
+            });
+        });
+    </script>
 </body>
 
 </html>

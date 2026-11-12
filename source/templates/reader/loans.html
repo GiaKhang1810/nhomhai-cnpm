@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="vi">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Sách đang mượn | Libra</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+
+<body class="min-h-screen bg-slate-50 text-slate-800">
+    <header class="bg-white border-b">
+        <div class="max-w-6xl mx-auto p-5"><a href="{{ url_for('profile.dashboard') }}" class="text-sm text-blue-600">←
+                Trang độc giả</a>
+            <h1 class="text-2xl font-bold mt-1">Sách đang mượn và yêu cầu của tôi</h1>
+            <p class="text-sm text-slate-500">{{ username }}</p>
+            <nav class="flex flex-wrap gap-4 mt-4 text-sm"><a class="text-blue-600"
+                    href="{{ url_for('profile.catalogue') }}">Đăng ký mượn sách</a><a class="text-slate-600"
+                    href="{{ url_for('profile.borrowing_history') }}">Lịch sử mượn</a></nav>
+        </div>
+    </header>
+    <main class="max-w-6xl mx-auto p-5 space-y-6">
+        <section class="bg-white border rounded-2xl p-5">
+            <div class="flex items-center justify-between gap-3 mb-4">
+                <div>
+                    <h2 class="font-semibold text-lg">Sách chưa trả</h2>
+                    <p class="text-sm text-slate-500">Gửi yêu cầu trả khi bạn chuẩn bị mang sách đến quầy. Thủ thư sẽ
+                        kiểm tra và xác nhận sau khi nhận sách.</p>
+                </div><span class="text-xs bg-blue-50 text-blue-700 px-3 py-1 rounded-full">{{ active_loans|length }}
+                    bản sao</span>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm min-w-[760px]">
+                    <thead>
+                        <tr class="text-left text-slate-500 border-b">
+                            <th class="py-3">Sách / Bản sao</th>
+                            <th>Mã phiếu</th>
+                            <th>Ngày mượn</th>
+                            <th>Hạn trả</th>
+                            <th>Yêu cầu trả</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in active_loans %}<tr class="border-b last:border-0">
+                            <td class="py-3">
+                                <div class="font-medium">{{ row.title }}</div>
+                                <div class="text-xs text-slate-400">{{ row.author }} · {{ row.copy_id }}</div>
+                            </td>
+                            <td>{{ row.loan_id }}</td>
+                            <td>{{ row.borrow_date.strftime('%d/%m/%Y') }}</td>
+                            <td class="{{ 'text-red-600 font-semibold' if row.due_date < today else '' }}">{{
+                                row.due_date.strftime('%d/%m/%Y') }}</td>
+                            <td>{% if row.return_request_status == 'PENDING' %}<span class="text-amber-600">Đang chờ thủ
+                                    thư</span><button class="cancelReturnRequest ml-2 text-xs text-red-600"
+                                    data-id="{{ row.return_request_id }}">Hủy</button>{% elif row.return_request_status
+                                == 'REJECTED' %}<span class="text-red-600"
+                                    title="{{ row.return_request_note or '' }}">Yêu cầu trước bị từ chối</span><button
+                                    class="requestReturn ml-2 rounded-lg bg-blue-600 text-white px-3 py-2 text-xs"
+                                    data-detail-id="{{ row.detail_id }}">Gửi lại</button>{% else %}<button
+                                    class="requestReturn rounded-lg bg-blue-600 text-white px-3 py-2 text-xs"
+                                    data-detail-id="{{ row.detail_id }}">Yêu cầu trả</button>{% endif %}</td>
+                        </tr>
+                        {% else %}<tr>
+                            <td colspan="5" class="py-8 text-center text-slate-400">Bạn hiện không có bản sao nào đang
+                                mượn.</td>
+                        </tr>{% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <p id="loanActionMessage" class="text-sm mt-3" aria-live="polite"></p>
+        </section>
+        <section class="bg-white border rounded-2xl p-5">
+            <h2 class="font-semibold text-lg">Yêu cầu mượn sách của tôi</h2>
+            <p class="text-sm text-slate-500 mb-4">Yêu cầu sẽ được thủ thư duyệt trước khi lập phiếu mượn chính thức.
+            </p>
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm min-w-[620px]">
+                    <thead>
+                        <tr class="text-left text-slate-500 border-b">
+                            <th class="py-3">Mã yêu cầu</th>
+                            <th>Sách</th>
+                            <th>Ngày gửi</th>
+                            <th>Trạng thái</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in borrow_requests %}<tr class="border-b last:border-0">
+                            <td class="py-3 font-medium">{{ row.request_id }}</td>
+                            <td>{{ row.requested_books }}</td>
+                            <td>{{ row.requested_at.strftime('%d/%m/%Y %H:%M') }}</td>
+                            <td>{% if row.status == 'PENDING' %}<span class="text-amber-600">Chờ duyệt</span>{% elif
+                                row.status == 'APPROVED' %}<span class="text-emerald-600">Đã duyệt</span>{% elif
+                                row.status == 'REJECTED' %}<span class="text-red-600">Từ chối</span>{% else %}<span
+                                    class="text-slate-500">Đã hủy</span>{% endif %}{% if row.staff_note %}<p
+                                    class="text-xs text-slate-400">{{ row.staff_note }}</p>{% endif %}</td>
+                            <td>{% if row.status == 'PENDING' %}<button class="cancelBorrowRequest text-xs text-red-600"
+                                    data-id="{{ row.request_id }}">Hủy yêu cầu</button>{% endif %}</td>
+                        </tr>
+                        {% else %}<tr>
+                            <td colspan="5" class="py-8 text-center text-slate-400">Bạn chưa gửi yêu cầu mượn sách nào.
+                            </td>
+                        </tr>{% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    </main>
+    <script src="{{ url_for('static', filename='js/reader-loans.js') }}"></script>
+</body>
+
+</html>

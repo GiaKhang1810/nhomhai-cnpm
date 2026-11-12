@@ -1,13 +1,17 @@
-from flask import Blueprint, jsonify, render_template, session
+from datetime import date
+
+from flask import Blueprint, jsonify, render_template, request, session
 
 from source.core.decorators import login_required, role_required
 from source.database.connection import get_db_connection
 from source.repositories.book_repository import BookRepository
 from source.repositories.reader_repository import ReaderRepository
+from source.repositories.request_repository import RequestRepository
 
 profile_bp = Blueprint("profile", __name__, url_prefix="/profile")
 book_repo = BookRepository()
 reader_repo = ReaderRepository()
+request_repo = RequestRepository()
 
 
 def _reader_id():
@@ -86,6 +90,118 @@ def borrowing_history():
         finally:
             cursor.close()
     return render_template("reader/history.html", username=session.get("username", "Độc giả"), records=records)
+
+
+@profile_bp.get("/loans")
+@login_required
+@role_required("READER")
+def loans():
+    reader_id = _reader_id()
+    active_loans = []
+    borrow_requests = []
+    if reader_id:
+        db = get_db_connection()
+        cursor = db.cursor(dictionary=True)
+        try:
+            cursor.execute(
+                """SELECT bd.detail_id, br.loan_id, b.title, b.author, bc.copy_id,
+                          br.borrow_date, br.due_date, bd.return_date,
+                          rr.return_request_id, rr.status AS return_request_status, rr.staff_note AS return_request_note
+                   FROM borrowing_records br
+                   JOIN borrowing_details bd ON bd.loan_id=br.loan_id
+                   JOIN book_copies bc ON bc.copy_id=bd.copy_id
+                   JOIN books b ON b.book_code=bc.book_code
+                   LEFT JOIN return_requests rr ON rr.return_request_id = (
+                       SELECT rr2.return_request_id FROM return_requests rr2
+                       WHERE rr2.detail_id=bd.detail_id
+                       ORDER BY rr2.requested_at DESC, rr2.return_request_id DESC LIMIT 1
+                   )
+                   WHERE br.reader_id=%s AND bd.return_date IS NULL
+                   ORDER BY br.due_date, br.borrow_date DESC""",
+                (reader_id,),
+            )
+            active_loans = cursor.fetchall()
+            cursor.execute(
+                """SELECT brq.request_id, brq.status, brq.requested_at, brq.staff_note,
+                          GROUP_CONCAT(CONCAT(b.title, ' × ', bri.quantity) ORDER BY b.title SEPARATOR ', ') AS requested_books
+                   FROM borrow_requests brq
+                   JOIN borrow_request_items bri ON bri.request_id=brq.request_id
+                   JOIN books b ON b.book_code=bri.book_code
+                   WHERE brq.reader_id=%s
+                   GROUP BY brq.request_id, brq.status, brq.requested_at, brq.staff_note
+                   ORDER BY brq.requested_at DESC LIMIT 50""",
+                (reader_id,),
+            )
+            borrow_requests = cursor.fetchall()
+        finally:
+            cursor.close()
+    return render_template(
+        "reader/loans.html", username=session.get("username", "Độc giả"),
+        active_loans=active_loans, borrow_requests=borrow_requests, today=date.today(),
+    )
+
+
+@profile_bp.post("/api/borrow-requests")
+@login_required
+@role_required("READER")
+def create_borrow_request():
+    reader_id = _reader_id()
+    if not reader_id:
+        return jsonify({"success": False, "message": "Tài khoản chưa có hồ sơ độc giả."}), 404
+    data = request.get_json(silent=True) or {}
+    book_code = str(data.get("book_code", "")).strip()
+    try:
+        quantity = int(data.get("quantity", 1))
+    except (TypeError, ValueError):
+        return jsonify({"success": False, "message": "Số lượng yêu cầu không hợp lệ."}), 400
+    if not book_code or quantity < 1 or quantity > 5:
+        return jsonify({"success": False, "message": "Vui lòng chọn sách và số lượng từ 1 đến 5."}), 400
+    try:
+        success, message, request_id = request_repo.create_borrow_request(reader_id, book_code, quantity)
+    except Exception:
+        return jsonify({"success": False, "message": "Không thể gửi yêu cầu mượn do lỗi hệ thống."}), 500
+    return jsonify({"success": success, "message": message, "request_id": request_id}), 201 if success else 400
+
+
+@profile_bp.post("/api/return-requests")
+@login_required
+@role_required("READER")
+def create_return_request():
+    reader_id = _reader_id()
+    if not reader_id:
+        return jsonify({"success": False, "message": "Tài khoản chưa có hồ sơ độc giả."}), 404
+    data = request.get_json(silent=True) or {}
+    try:
+        detail_id = int(data.get("detail_id"))
+    except (TypeError, ValueError):
+        return jsonify({"success": False, "message": "Mã chi tiết phiếu mượn không hợp lệ."}), 400
+    try:
+        success, message, request_id = request_repo.create_return_request(reader_id, detail_id)
+    except Exception:
+        return jsonify({"success": False, "message": "Không thể gửi yêu cầu trả do lỗi hệ thống."}), 500
+    return jsonify({"success": success, "message": message, "request_id": request_id}), 201 if success else 400
+
+
+@profile_bp.post("/api/borrow-requests/<string:request_id>/cancel")
+@login_required
+@role_required("READER")
+def cancel_borrow_request(request_id: str):
+    reader_id = _reader_id()
+    if not reader_id:
+        return jsonify({"success": False, "message": "Không tìm thấy hồ sơ độc giả."}), 404
+    success, message = request_repo.cancel_borrow_request(reader_id, request_id)
+    return jsonify({"success": success, "message": message}), 200 if success else 400
+
+
+@profile_bp.post("/api/return-requests/<string:request_id>/cancel")
+@login_required
+@role_required("READER")
+def cancel_return_request(request_id: str):
+    reader_id = _reader_id()
+    if not reader_id:
+        return jsonify({"success": False, "message": "Không tìm thấy hồ sơ độc giả."}), 404
+    success, message = request_repo.cancel_return_request(reader_id, request_id)
+    return jsonify({"success": success, "message": message}), 200 if success else 400
 
 
 @profile_bp.get("/api/me")

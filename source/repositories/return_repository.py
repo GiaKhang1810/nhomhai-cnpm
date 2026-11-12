@@ -43,6 +43,7 @@ class ReturnRepository:
         loan_id: str,
         return_date: date,
         items: list[dict[str, str]],
+        processed_by: int | None = None,
     ) -> tuple[bool, Decimal, str]:
         db = get_db_connection()
         cursor = db.cursor(dictionary=True)
@@ -118,6 +119,12 @@ class ReturnRepository:
                     )
                     if cursor.rowcount != 1:
                         raise ValueError("Số lượng sách khả dụng không nhất quán. Giao dịch đã được hủy.")
+                cursor.execute(
+                    """UPDATE return_requests
+                       SET status='COMPLETED', processed_by=%s, processed_at=NOW()
+                       WHERE detail_id=%s AND status='PENDING'""",
+                    (processed_by, copy_info["detail_id"]),
+                )
                 total_charge += fine + compensation
 
             cursor.execute(

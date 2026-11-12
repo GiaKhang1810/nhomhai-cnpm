@@ -43,10 +43,15 @@
                         <i class="fa-solid fa-magnifying-glass w-5 text-center"></i>
                         Khám phá sách
                     </a>
-                    <a href="{{ url_for('profile.borrowing_history') }}"
+                    <a href="{{ url_for('profile.loans') }}"
                         class="flex items-center gap-3 px-3 py-2.5 text-slate-500 hover:bg-slate-50 hover:text-slate-700 rounded-lg font-medium text-sm transition-colors">
                         <i class="fa-solid fa-book-bookmark w-5 text-center"></i>
-                        Sách đang mượn
+                        Sách đang mượn / Trả sách
+                    </a>
+                    <a href="{{ url_for('profile.catalogue') }}"
+                        class="flex items-center gap-3 px-3 py-2.5 text-slate-500 hover:bg-slate-50 hover:text-slate-700 rounded-lg font-medium text-sm transition-colors">
+                        <i class="fa-solid fa-book-medical w-5 text-center"></i>
+                        Đăng ký mượn sách
                     </a>
                     <a href="{{ url_for('profile.borrowing_history') }}"
                         class="flex items-center gap-3 px-3 py-2.5 text-slate-500 hover:bg-slate-50 hover:text-slate-700 rounded-lg font-medium text-sm transition-colors">
@@ -82,7 +87,7 @@
                 <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
                 <a href="{{ url_for('profile.catalogue') }}" class="absolute inset-0"
                     aria-label="Mở tìm kiếm sách"></a><input type="text" readonly
-                    onclick="window.location.href='{{ url_for(\'profile.catalogue\') }}'"
+                    onclick="{{ url_for('profile.catalogue') }}"
                     placeholder="Tìm tên sách, tác giả, ISBN..."
                     class="w-full pl-10 pr-4 py-2 bg-white border border-slate-200 rounded-full text-sm focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-all shadow-sm">
             </div>
