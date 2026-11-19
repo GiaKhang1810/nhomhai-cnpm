@@ -211,41 +211,34 @@ def personal_profile():
     reader = reader_repo.get_by_user_id(int(session["user_id"]))
     if not reader:
         return jsonify({"success": False, "message": "Không tìm thấy hồ sơ độc giả."}), 404
-    return jsonify({"success": True, "data": {
-        "reader_id": reader.reader_id,
-        "full_name": reader.full_name,
-        "dob": reader.dob.isoformat() if reader.dob else None,
-        "gender": reader.gender,
-        "identity_number": reader.identity_number,
-        "phone": reader.phone,
-        "card_issue_date": reader.card_issue_date.isoformat(),
-        "card_expiry_date": reader.card_expiry_date.isoformat(),
-        "account_status": reader.account_status,
-    }})
+    return jsonify({"success": True, "data": reader.view_profile()})
 
 
 @profile_bp.get("/api/history")
 @login_required
 @role_required("READER")
 def personal_history_api():
-    reader_id = _reader_id()
-    if not reader_id:
+    reader = reader_repo.get_by_user_id(int(session["user_id"]))
+    if not reader:
         return jsonify({"success": True, "data": []})
-    db = get_db_connection()
-    cursor = db.cursor(dictionary=True)
-    try:
-        cursor.execute(
-            """SELECT br.loan_id, b.title, bd.copy_id, br.borrow_date, br.due_date,
-                      bd.return_date, bd.overdue_fine, bd.compensation
-               FROM borrowing_records br JOIN borrowing_details bd ON bd.loan_id=br.loan_id
-               JOIN book_copies bc ON bc.copy_id=bd.copy_id JOIN books b ON b.book_code=bc.book_code
-               WHERE br.reader_id=%s ORDER BY br.borrow_date DESC""",
-            (reader_id,),
-        )
-        rows = cursor.fetchall()
-        return jsonify({"success": True, "data": rows})
-    finally:
-        cursor.close()
+
+    def load_reader_history(reader_id: str):
+        db = get_db_connection()
+        cursor = db.cursor(dictionary=True)
+        try:
+            cursor.execute(
+                """SELECT br.loan_id, b.title, bd.copy_id, br.borrow_date, br.due_date,
+                          bd.return_date, bd.overdue_fine, bd.compensation
+                   FROM borrowing_records br JOIN borrowing_details bd ON bd.loan_id=br.loan_id
+                   JOIN book_copies bc ON bc.copy_id=bd.copy_id JOIN books b ON b.book_code=bc.book_code
+                   WHERE br.reader_id=%s ORDER BY br.borrow_date DESC""",
+                (reader_id,),
+            )
+            return cursor.fetchall()
+        finally:
+            cursor.close()
+
+    return jsonify({"success": True, "data": reader.view_borrowing_history(load_reader_history)})
 
 
 @profile_bp.get("/catalogue")

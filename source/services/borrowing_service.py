@@ -30,8 +30,9 @@ class BorrowingService:
             reader_id=reader_id.strip(),
             borrow_date=today,
             due_date=today + timedelta(days=14),
-            details=[BorrowingDetail(copy_id=copy_id.strip()) for copy_id in copy_ids],
         )
+        for copy_id in copy_ids:
+            record.add_detail(BorrowingDetail(copy_id=copy_id.strip()))
         try:
             return self.borrowing_repo.create_loan_transaction(record, request_id=request_id, processed_by=processed_by)
         except Exception:

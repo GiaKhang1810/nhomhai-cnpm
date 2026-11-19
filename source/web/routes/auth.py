@@ -1,9 +1,8 @@
 from flask import Blueprint, flash, jsonify, redirect, render_template, request, session, url_for
 
-from source.services.auth_service import AuthService
+from source.domain.entities.user import User
 
 auth_bp = Blueprint("auth", __name__, url_prefix="/auth")
-auth_service = AuthService()
 ROLE_MAP = {"reader": "READER", "librarian": "LIBRARIAN", "admin": "ADMIN"}
 DESTINATIONS = {
     "READER": "/profile/dashboard",
@@ -34,7 +33,7 @@ def login():
             flash(message, "danger")
             return render_template("auth/login.html"), 400
 
-        user = auth_service.authenticate(username, password, selected_role)
+        user = User.login(username, password, selected_role)
         if user:
             session.clear()
             session.permanent = bool(data.get("rememberMe", False))

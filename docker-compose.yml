@@ -1,0 +1,45 @@
+services:
+  db:
+    image: mysql:8.4
+    container_name: libra-db
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${DB_NAME:-library_db}
+      MYSQL_USER: ${DB_USER:-libra_app}
+      MYSQL_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in .env}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?Set MYSQL_ROOT_PASSWORD in .env}
+    ports:
+      - "3306:3306"
+    volumes:
+      - libra-mysql-data:/var/lib/mysql
+      - ./migrations/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$$MYSQL_ROOT_PASSWORD --silent"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 20s
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: libra-app
+    restart: unless-stopped
+    environment:
+      SECRET_KEY: ${SECRET_KEY:?Set SECRET_KEY in .env}
+      DB_HOST: db
+      DB_PORT: 3306
+      DB_USER: ${DB_USER:-libra_app}
+      DB_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in .env}
+      DB_NAME: ${DB_NAME:-library_db}
+      DB_CONNECT_TIMEOUT: ${DB_CONNECT_TIMEOUT:-10}
+      SESSION_COOKIE_SECURE: ${SESSION_COOKIE_SECURE:-false}
+    ports:
+      - "5000:5000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  libra-mysql-data:

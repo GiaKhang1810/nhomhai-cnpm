@@ -14,8 +14,6 @@ class Config:
     """Runtime configuration loaded from environment variables."""
 
     SECRET_KEY = os.getenv("SECRET_KEY")
-    if not SECRET_KEY or SECRET_KEY.startswith("replace-with-"):
-        raise RuntimeError("SECRET_KEY chưa được cấu hình. Hãy tạo khóa ngẫu nhiên trong file .env.")
     DB_HOST = os.getenv("DB_HOST", "127.0.0.1")
     DB_USER = os.getenv("DB_USER", "root")
     DB_PASSWORD = os.getenv("DB_PASSWORD", "")

@@ -9,6 +9,9 @@ from source.database.connection import close_db_connection
 def create_app(config_class=Config) -> Flask:
     app = Flask(__name__, template_folder="templates", static_folder="static")
     app.config.from_object(config_class)
+    secret_key = app.config.get("SECRET_KEY")
+    if not secret_key or str(secret_key).startswith("replace-with-"):
+        raise RuntimeError("SECRET_KEY chưa được cấu hình. Hãy tạo khóa ngẫu nhiên trong file .env.")
 
     app.teardown_appcontext(close_db_connection)
 

@@ -83,13 +83,33 @@ Hệ thống quản lý thư viện xây dựng bằng **Python 3.13+, Flask và
 
    Script yêu cầu username, email và password; mật khẩu được hash trước khi lưu.
 
-5. Chạy ứng dụng:
+5. Chạy ứng dụng trực tiếp:
 
    ```bash
    poetry run python -m source.app
    ```
 
    Mở `http://127.0.0.1:5000`.
+
+### Chạy bằng Docker Compose
+
+1. Copy `.env.example` thành `.env`; đặt `SECRET_KEY`, `DB_PASSWORD` và `MYSQL_ROOT_PASSWORD` thành các giá trị riêng, không dùng các giá trị placeholder. Với cấu hình mặc định, giữ `DB_NAME=library_db`.
+2. Build và chạy cả Flask + MySQL:
+
+   ```bash
+   docker compose up --build -d
+   ```
+
+   Compose khởi tạo MySQL từ `migrations/schema.sql` khi volume database được tạo lần đầu. Dữ liệu MySQL được giữ trong volume `libra-mysql-data`.
+3. Tạo tài khoản Administrator đầu tiên:
+
+   ```bash
+   docker compose exec app python scripts/create_admin.py
+   ```
+
+4. Truy cập `http://localhost:5000`. Xem log bằng `docker compose logs -f app` và dừng bằng `docker compose down`.
+
+   Không dùng `docker compose down -v` trừ khi chủ động muốn xóa volume và toàn bộ dữ liệu MySQL.
 
 ## Luồng nghiệp vụ quan trọng
 
@@ -173,7 +193,7 @@ Chạy kiểm thử quy tắc thuần Python bằng:
 poetry run python -m unittest discover -s tests -v
 ```
 
-Các luồng cần kiểm thử tích hợp với MySQL gồm đăng nhập, tạo đầu sách/bản sao, mượn và trả đồng thời, thanh toán từng phần, phân quyền và báo cáo. Các kiểm thử tích hợp này cần một MySQL instance được khởi tạo từ `migrations/schema.sql`.
+Bộ unit test mở rộng kiểm tra quy tắc mượn, tính phí, các domain entity và phân quyền giao diện. Web access tests cần dependency Flask đã được cài qua Poetry. Các luồng cần kiểm thử tích hợp với MySQL gồm đăng nhập, tạo đầu sách/bản sao, mượn và trả đồng thời, thanh toán từng phần, phân quyền và báo cáo; cần một MySQL instance được khởi tạo từ `migrations/schema.sql`. Xem ma trận bao phủ tại `docs/PROGRAMMING_TESTING_COVERAGE.md` và bộ 48 kịch bản tại `docs/TESTING_DOCUMENT.xlsx`.
 
 ## Lưu ý vận hành và bảo mật
 

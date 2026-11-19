@@ -1,6 +1,7 @@
 from flask import Blueprint, render_template, session
 
 from source.core.decorators import login_required, role_required
+from source.domain.entities.administrator import Administrator
 from source.repositories.report_repository import ReportRepository
 
 admin_bp = Blueprint("admin", __name__, url_prefix="/admin")
@@ -11,7 +12,8 @@ report_repo = ReportRepository()
 @login_required
 @role_required("ADMIN")
 def dashboard():
-    metrics_data = report_repo.get_dashboard_metrics()
+    report_data = Administrator(admin_id=int(session["user_id"])).generate_reports(report_repo)
+    metrics_data = report_data["metrics"]
     metrics = {
         "total_titles": f"{metrics_data['total_titles']:,}",
         "title_trend": f"{metrics_data['total_copies']:,} bản sao trong kho",
@@ -22,7 +24,7 @@ def dashboard():
         "overdue_books": f"{metrics_data['overdue_loans']:,}",
         "overdue_note": "Bản sao cần xử lý",
     }
-    transactions = report_repo.get_recent_transactions(8)
+    transactions = report_data["recent_transactions"][:8]
     formatted = []
     for row in transactions:
         status = row["status"]

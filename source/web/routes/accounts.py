@@ -1,17 +1,22 @@
 from flask import Blueprint, jsonify, request, session
 
 from source.core.decorators import login_required, role_required
+from source.domain.entities.administrator import Administrator
 from source.services.account_service import AccountService
 
 accounts_bp = Blueprint("accounts", __name__, url_prefix="/api/accounts")
 account_service = AccountService()
 
 
+def _administrator() -> Administrator:
+    return Administrator(admin_id=int(session["user_id"]))
+
+
 @accounts_bp.get("/")
 @login_required
 @role_required("ADMIN")
 def list_staff():
-    response = jsonify({"success": True, "data": account_service.list_staff_accounts()})
+    response = jsonify({"success": True, "data": _administrator().manage_staff_accounts(account_service, "list")})
     response.headers["Cache-Control"] = "no-store, max-age=0"
     return response
 
@@ -21,7 +26,7 @@ def list_staff():
 @role_required("ADMIN")
 def create_staff():
     data = request.get_json(silent=True) or {}
-    success, message = account_service.create_staff_account(data)
+    success, message = _administrator().manage_staff_accounts(account_service, "create", data)
     response = jsonify({"success": success, "message": message})
     response.status_code = 201 if success else 400
     response.headers["Cache-Control"] = "no-store, max-age=0"
@@ -35,7 +40,7 @@ def update_staff(user_id: int):
     data = request.get_json(silent=True) or {}
     if user_id == session.get("user_id") and data.get("role"):
         return jsonify({"success": False, "message": "Không thể tự thay đổi vai trò tài khoản đang sử dụng."}), 400
-    success, message = account_service.update_staff_account(user_id, data)
+    success, message = _administrator().manage_staff_accounts(account_service, "update", user_id, data)
     response = jsonify({"success": success, "message": message})
     response.status_code = 200 if success else 400
     response.headers["Cache-Control"] = "no-store, max-age=0"
@@ -46,7 +51,7 @@ def update_staff(user_id: int):
 @login_required
 @role_required("ADMIN")
 def deactivate_staff(user_id: int):
-    success, message = account_service.deactivate_staff_account(user_id, int(session["user_id"]))
+    success, message = _administrator().manage_staff_accounts(account_service, "deactivate", user_id, int(session["user_id"]))
     return jsonify({"success": success, "message": message}), 200 if success else 400
 
 
@@ -54,7 +59,7 @@ def deactivate_staff(user_id: int):
 @login_required
 @role_required("ADMIN")
 def activate_staff(user_id: int):
-    success, message = account_service.activate_staff_account(user_id)
+    success, message = _administrator().manage_staff_accounts(account_service, "activate", user_id)
     response = jsonify({"success": success, "message": message})
     response.status_code = 200 if success else 400
     response.headers["Cache-Control"] = "no-store, max-age=0"
@@ -65,7 +70,7 @@ def activate_staff(user_id: int):
 @login_required
 @role_required("ADMIN")
 def delete_staff(user_id: int):
-    success, message = account_service.delete_staff_account(user_id, int(session["user_id"]))
+    success, message = _administrator().manage_staff_accounts(account_service, "delete", user_id, int(session["user_id"]))
     response = jsonify({"success": success, "message": message})
     response.status_code = 200 if success else 400
     response.headers["Cache-Control"] = "no-store, max-age=0"

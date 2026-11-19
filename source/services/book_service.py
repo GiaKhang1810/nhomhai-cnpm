@@ -68,6 +68,15 @@ class BookService:
             if field in normalized:
                 normalized[field] = str(normalized[field]).strip() or None
         try:
+            current_book = self.book_repo.get_by_code(book_code)
+            if current_book is None:
+                return False, "Không tìm thấy đầu sách."
+            domain_fields = {
+                key: value for key, value in normalized.items()
+                if key != "total_quantity"
+            }
+            if domain_fields:
+                current_book.update_book(**domain_fields)
             if "total_quantity" in normalized:
                 normalized["total_quantity"] = int(normalized["total_quantity"])
                 if normalized["total_quantity"] < 0:
@@ -85,10 +94,17 @@ class BookService:
         return self.book_repo.update(book_code, normalized)
 
     def deactivate_book(self, book_code: str) -> tuple[bool, str]:
+        book = self.book_repo.get_by_code(book_code)
+        if book is None:
+            return False, "Không tìm thấy đầu sách."
+        book.deactivate()
         return self.book_repo.deactivate(book_code)
 
-
     def activate_book(self, book_code: str) -> tuple[bool, str]:
+        book = self.book_repo.get_by_code(book_code)
+        if book is None:
+            return False, "Không tìm thấy đầu sách."
+        book.activate()
         return self.book_repo.activate(book_code)
 
     def delete_book(self, book_code: str) -> tuple[bool, str]:

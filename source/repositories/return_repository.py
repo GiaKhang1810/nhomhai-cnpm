@@ -4,7 +4,8 @@ from datetime import date
 from decimal import Decimal
 from typing import Any
 
-from source.core.money import calculate_overdue_fine
+from source.domain.entities.book_copy import BookCopy
+from source.domain.entities.borrowing import BorrowingDetail
 from source.database.connection import get_db_connection
 
 
@@ -80,7 +81,7 @@ class ReturnRepository:
 
                 cursor.execute(
                     """SELECT bd.detail_id, bd.return_date, bc.copy_id, bc.book_code,
-                              bc.status, b.listed_value
+                              bc.status, bc.`condition`, b.listed_value
                        FROM borrowing_details bd
                        JOIN book_copies bc ON bc.copy_id=bd.copy_id
                        JOIN books b ON b.book_code=bc.book_code
@@ -95,9 +96,27 @@ class ReturnRepository:
                 if copy_info["status"] != "BORROWED":
                     raise ValueError(f"Trạng thái bản sao {item['copy_id']} không hợp lệ để trả.")
 
-                fine = calculate_overdue_fine(loan["due_date"], return_date)
-                compensation = Decimal(str(copy_info["listed_value"])) if condition in {"DAMAGED", "LOST"} else Decimal("0.00")
+                detail_entity = BorrowingDetail(
+                    copy_id=item["copy_id"],
+                    detail_id=int(copy_info["detail_id"]),
+                    loan_id=loan_id,
+                )
+                detail_entity.calculate_fine(
+                    loan["due_date"],
+                    return_date,
+                    condition=condition,
+                    listed_value=Decimal(str(copy_info["listed_value"])),
+                )
+                fine = detail_entity.overdue_fine
+                compensation = detail_entity.compensation
                 new_status = "AVAILABLE" if condition == "NORMAL" else condition
+                copy_entity = BookCopy(
+                    copy_id=item["copy_id"],
+                    book_code=copy_info["book_code"],
+                    condition=str(copy_info["condition"]),
+                    status=str(copy_info["status"]),
+                )
+                copy_entity.update_status(new_status, condition)
 
                 cursor.execute(
                     """UPDATE borrowing_details SET return_date=%s, overdue_fine=%s, compensation=%s
