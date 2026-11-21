@@ -5,16 +5,18 @@ services:
     restart: unless-stopped
     environment:
       MYSQL_DATABASE: ${DB_NAME:-library_db}
-      MYSQL_USER: ${DB_USER:-libra_app}
+      MYSQL_USER: ${DB_USER:-libra}
       MYSQL_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in .env}
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:?Set MYSQL_ROOT_PASSWORD in .env}
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in .env}
     ports:
-      - "3306:3306"
+      - "3307:3306"
     volumes:
       - libra-mysql-data:/var/lib/mysql
       - ./migrations/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
     healthcheck:
-      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -uroot -p$$MYSQL_ROOT_PASSWORD --silent"]
+      test:
+        - CMD-SHELL
+        - mysqladmin ping -h 127.0.0.1 -uroot -p$$MYSQL_ROOT_PASSWORD --silent
       interval: 5s
       timeout: 5s
       retries: 20
@@ -30,7 +32,7 @@ services:
       SECRET_KEY: ${SECRET_KEY:?Set SECRET_KEY in .env}
       DB_HOST: db
       DB_PORT: 3306
-      DB_USER: ${DB_USER:-libra_app}
+      DB_USER: ${DB_USER:-libra}
       DB_PASSWORD: ${DB_PASSWORD:?Set DB_PASSWORD in .env}
       DB_NAME: ${DB_NAME:-library_db}
       DB_CONNECT_TIMEOUT: ${DB_CONNECT_TIMEOUT:-10}
